@@ -7,6 +7,30 @@ end
 function RSAStep(msg::BigInt, e::BigInt, n::BigInt)
     return (msg ^ e) % n
 end
+
+function RSAStep(msg::Base.CodeUnits{UInt8, String}, e::BigInt, n::BigInt)
+    msg_bi = BigInt()
+    # https://gmplib.org/manual/Integer-Import-and-Export#index-mpz_005fimport
+    # void mpz_import (mpz_t rop, size_t count, int order, size_t size, int endian, size_t nails, const void *op)
+    _order = 0
+    _size = 1
+    _endian = 0
+    _nails = 0
+    Base.GMP.MPZ.import!(msg_bi, length(msg), _order, _size, _endian, _nails, pointer(msg))
+    result = RSAStep(msg_bi, e, n)
+    # https://gmplib.org/manual/Integer-Import-and-Export#index-mpz_005fexport
+    msg_buf = Vector{UInt8}(undef, msg_bi.size)
+    Base.GMP.MPZ.export!(msg_buf, result, order=_order, nails=_nails, endian=_endian)
+    return msg_buf
+end
+
+function RSAStep(msg::String, e::BigInt, n::BigInt)
+    msg_cu = codeunits(msg)
+    result = RSAStep(msg_cu, e, n)
+    transformed_msg = String(result)
+    return transformed_msg
+end
+
 function pass_trough_GMP(str::String)
     bi = BigInt()
     # https://gmplib.org/manual/Integer-Import-and-Export#index-mpz_005fimport
