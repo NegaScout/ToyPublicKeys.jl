@@ -8,7 +8,7 @@ function RSAStep(msg::BigInt, e::BigInt, n::BigInt)
     return (msg ^ e) % n
 end
 
-function RSAStep(msg::Base.CodeUnits{UInt8, String}, e::BigInt, n::BigInt)
+function RSAStep(msg::AbstractArray{T}, e::BigInt, n::BigInt) where T
     msg_bi = BigInt()
     # https://gmplib.org/manual/Integer-Import-and-Export#index-mpz_005fimport
     # void mpz_import (mpz_t rop, size_t count, int order, size_t size, int endian, size_t nails, const void *op)
