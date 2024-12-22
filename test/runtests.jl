@@ -17,3 +17,8 @@ using Test
     println("Decrypted Message: $decrypted")
     encrypted == msg
 end
+
+@testset "RSA.jl" begin
+    test_str = "this_is_test_str"
+    ToyPublicKeys.pass_trough_GMP(test_str) == "this_is_test_str"
+end
