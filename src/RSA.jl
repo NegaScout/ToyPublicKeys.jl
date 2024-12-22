@@ -4,8 +4,9 @@ struct RSAKey
     type:: AsymetricKeyType
 end
 
-function RSAStep(m::BigInt, e::BigInt, n::BigInt)
-    return (m ^ e) % n
+function RSAStep(msg::BigInt, e::BigInt, n::BigInt)
+    return (msg ^ e) % n
+end
 end
 
 function encrypt(msg, key::RSAKey)
