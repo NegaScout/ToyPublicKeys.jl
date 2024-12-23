@@ -5,7 +5,7 @@ struct RSAKey
 end
 
 function RSAStep(msg::BigInt, e::BigInt, n::BigInt)
-    return (msg ^ e) % n
+    return Base.GMP.MPZ.powm(msg, e, n)
 end
 
 function RSAStep(msg::AbstractArray{T}, e::BigInt, n::BigInt) where T
