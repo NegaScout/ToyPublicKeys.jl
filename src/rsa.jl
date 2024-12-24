@@ -1,10 +1,14 @@
 struct RSAKey
     key_module::BigInt
+    key_module_factorization:: Tuple{BigInt, BigInt}
     key_component::BigInt
     type:: AsymetricKeyType
 end
 
 function RSAStep(msg::BigInt, e::BigInt, n::BigInt)
+    if !(0 <= msg < n)
+        error("msg has to be 0 <= msg < n")
+    end
     return Base.GMP.MPZ.powm(msg, e, n)
 end
 
@@ -50,7 +54,23 @@ function encrypt(msg, key::RSAKey)
     return RSAStep(msg, key.key_component, key.key_module)
 end
 
-# Decryption using the private key
 function decrypt(msg, key::RSAKey)
+    # todo: take advantage of known factorization
     return RSAStep(msg, key.key_component, key.key_module)
+end
+
+function generate_RSAKeyPair()
+    # todo: not enough bit size
+    p = rand_prime()
+    q = rand_prime()
+    m = p * q
+    carm_tot = lcm(p − 1, q − 1)
+    e = big"65537"
+    if e >= carm_tot
+        pritln("Broken carm tot")
+        return Nothing
+    end
+    d = big"65537"
+    Base.GMP.MPZ.invert!(d, carm_tot) # for some reason Base.GMP.MPZ.invert is broken
+    return (RSAKey(m, (p, q), d, private_key), RSAKey(m, (0, 0), e, public_key))
 end

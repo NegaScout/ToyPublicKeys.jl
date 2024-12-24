@@ -6,9 +6,9 @@ using Test
     e = big"17"         # Example public exponent
     d = big"2753"       # Example private exponent
 
-    public_key = ToyPublicKeys.RSAKey(n, e, ToyPublicKeys.public_key)
-    private_key = ToyPublicKeys.RSAKey(n, d, ToyPublicKeys.private_key)
-    msg = big"123"
+    public_key = ToyPublicKeys.RSAKey(n, (BigInt(53), BigInt(61)), e, ToyPublicKeys.public_key)
+    private_key = ToyPublicKeys.RSAKey(n, (BigInt(1), BigInt(1)), d, ToyPublicKeys.private_key)
+    msg = big"1"
 
     encrypted = ToyPublicKeys.encrypt(msg, public_key)
     println("Encrypted Message: $encrypted")
@@ -23,9 +23,9 @@ end
     e = big"17"         # Example public exponent
     d = big"2753"       # Example private exponent
 
-    public_key = ToyPublicKeys.RSAKey(n, e, ToyPublicKeys.public_key)
-    private_key = ToyPublicKeys.RSAKey(n, d, ToyPublicKeys.private_key)
-    msg = Base.CodeUnits("123")
+    public_key = ToyPublicKeys.RSAKey(n, (BigInt(53), BigInt(61)), e, ToyPublicKeys.public_key)
+    private_key = ToyPublicKeys.RSAKey(n, (BigInt(1), BigInt(1)), d, ToyPublicKeys.private_key)
+    msg = Base.CodeUnits("1")
 
     encrypted = ToyPublicKeys.encrypt(msg, public_key)
     println("Encrypted Message: $encrypted")
@@ -40,9 +40,9 @@ end
     e = big"17"         # Example public exponent
     d = big"2753"       # Example private exponent
 
-    public_key = ToyPublicKeys.RSAKey(n, e, ToyPublicKeys.public_key)
-    private_key = ToyPublicKeys.RSAKey(n, d, ToyPublicKeys.private_key)
-    msg = "123"
+    public_key = ToyPublicKeys.RSAKey(n, (BigInt(53), BigInt(61)), e, ToyPublicKeys.public_key)
+    private_key = ToyPublicKeys.RSAKey(n, (BigInt(1), BigInt(1)), d, ToyPublicKeys.private_key)
+    msg = "1"
 
     encrypted = ToyPublicKeys.encrypt(msg, public_key)
     println("Encrypted Message: $encrypted")
