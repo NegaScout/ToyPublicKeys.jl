@@ -1,5 +1,6 @@
 using ToyPublicKeys
 using Test
+import Random
 
 @testset "Decryption(Encryption) is identity ~ BigInt" begin
     n = big"3233"       # Example modulus
@@ -11,11 +12,13 @@ using Test
     msg = big"1"
 
     encrypted = ToyPublicKeys.encrypt(msg, public_key)
-    println("Encrypted Message: $encrypted")
-
     decrypted = ToyPublicKeys.decrypt(encrypted, private_key)
-    println("Decrypted Message: $decrypted")
-    encrypted == msg
+    @test decrypted == msg
+end
+
+@testset "RSA.jl" begin
+    test_str = "this_is_test_str"
+    @test ToyPublicKeys.pass_trough_GMP(test_str) == "this_is_test_str"
 end
 
 @testset "Decryption(Encryption) is identity ~ CodeUnits" begin
@@ -28,11 +31,8 @@ end
     msg = Base.CodeUnits("1")
 
     encrypted = ToyPublicKeys.encrypt(msg, public_key)
-    println("Encrypted Message: $encrypted")
-
     decrypted = ToyPublicKeys.decrypt(encrypted, private_key)
-    println("Decrypted Message: $decrypted")
-    encrypted == msg
+    @test decrypted == msg
 end
 
 @testset "Decryption(Encryption) is identity ~ String" begin
@@ -45,14 +45,8 @@ end
     msg = "1"
 
     encrypted = ToyPublicKeys.encrypt(msg, public_key)
-    println("Encrypted Message: $encrypted")
-
     decrypted = ToyPublicKeys.decrypt(encrypted, private_key)
-    println("Decrypted Message: $decrypted")
-    encrypted == msg
+    @test decrypted == msg
 end
 
-@testset "RSA.jl" begin
-    test_str = "this_is_test_str"
-    ToyPublicKeys.pass_trough_GMP(test_str) == "this_is_test_str"
 end
