@@ -9,8 +9,11 @@ function RSAStep(msg::BigInt, key::RSAKey)
     if !(0 <= msg < key.key_module)
         error("msg has to be 0 <= msg < n, got: msg = $msg, n = $key.key_module")
     end
-    ret = Base.GMP.MPZ.powm(msg, key.key_component, key.key_module)
-    return ret
+    if key.key_module_factorization != (0, 0)
+        return ToyPublicKeys.power_crt(msg, key.key_component, key.key_module_factorization[1], key.key_module_factorization[2])
+    else
+        return Base.GMP.MPZ.powm(msg, key.key_component, key.key_module)
+    end
 end
 
 function RSAStep(msg::AbstractVector{T}, key::RSAKey) where T <: Base.BitInteger
@@ -58,7 +61,6 @@ function encrypt(msg::Union{AbstractString, AbstractVector}, key::RSAKey; pad_le
 end
 
 function decrypt(msg::AbstractString, key::RSAKey)
-    # todo: take advantage of known factorization
     msg_ = codeunits(msg)
     msg_decr = RSAStep(msg_, key)
     unpaded = ToyPublicKeys.unpad(vcat(typeof(msg_decr)([0]), msg_decr)) # todo: leading zero is ignored, gotta deal with this 
@@ -66,7 +68,6 @@ function decrypt(msg::AbstractString, key::RSAKey)
 end
 
 function decrypt(msg::AbstractVector, key::RSAKey)
-    # todo: take advantage of known factorization
     msg_decr = RSAStep(msg, key)
     return ToyPublicKeys.unpad(vcat(typeof(msg_decr)([0]), msg_decr)) # todo: leading zero is ignored, gotta deal with this
 end
