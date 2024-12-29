@@ -1,3 +1,5 @@
+# NOTE: This RSA implementation tries to follow RFC 2313, however it is not conformant with it. Future work: conform this with RFC 2313 or better, with RFC 2437
+
 struct RSAKey
     key_module::BigInt
     key_module_factorization:: Tuple{BigInt, BigInt}
@@ -74,11 +76,11 @@ end
 
 function generate_RSAKeyPair(type:: Type)
     # todo: not enough bit size
-    p = rand_prime(type)
-    q = rand_prime(type)
+    e = big"65537"
+    p = rand_prime_for_rsa(type, e)
+    q = rand_prime_for_rsa(type, e)
     m = p * q
     carm_tot = lcm(p − 1, q − 1)
-    e = big"65537"
     if !(1 < e < carm_tot)
         println("Broken carm_tot,  has to be (1 < e < carm_tot): e = $e, carm_tot = $carm_tot")
         return Nothing

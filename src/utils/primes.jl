@@ -16,12 +16,12 @@ function is_probab_prime_p(n:: BigInt, n_tests:: Int)
     end
 end
 
-function rand_prime(type:: Type)
+function rand_prime_for_rsa(type:: Type, no_lcm_with=big"65537")
     ntest = 20
     fst = Nothing
     while true
         fst = BigInt(rand(type))
-        if is_probab_prime_p(fst, ntest) ∈ [:prime, :probably_prime]
+        if is_probab_prime_p(fst, ntest) ∈ [:prime, :probably_prime] && gcd(fst, no_lcm_with) == 1
             break
         end
     end
