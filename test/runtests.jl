@@ -7,6 +7,16 @@ import Random
     @test ToyPublicKeys.pass_trough_GMP(test_str) == "this_is_test_str"
 end
 
+@testset "power_crt" begin
+    base = big"123456"
+    modul = big"265277633"
+    f1 = big"38561"
+    f2 = big"15107"
+    pow_crt = ToyPublicKeys.power_crt(base, modul, f1, f2)
+    pow_m = Base.GMP.MPZ.powm(base, modul, f1*f2)
+    @test pow_crt == pow_m
+end
+
 @testset "RSAStep(RSAStep) is identity ~ BigInt" begin
     Random.seed!(42)
     private_key, public_key = ToyPublicKeys.generate_RSAKeyPair(UInt16)
