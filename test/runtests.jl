@@ -2,51 +2,36 @@ using ToyPublicKeys
 using Test
 import Random
 
-@testset "Decryption(Encryption) is identity ~ BigInt" begin
-    n = big"3233"       # Example modulus
-    e = big"17"         # Example public exponent
-    d = big"2753"       # Example private exponent
-
-    public_key = ToyPublicKeys.RSAKey(n, (BigInt(53), BigInt(61)), e, ToyPublicKeys.public_key)
-    private_key = ToyPublicKeys.RSAKey(n, (BigInt(1), BigInt(1)), d, ToyPublicKeys.private_key)
-    msg = big"1"
-
-    encrypted = ToyPublicKeys.encrypt(msg, public_key)
-    decrypted = ToyPublicKeys.decrypt(encrypted, private_key)
-    @test decrypted == msg
-end
-
-@testset "RSA.jl" begin
+@testset "pass_trough_GMP" begin
     test_str = "this_is_test_str"
     @test ToyPublicKeys.pass_trough_GMP(test_str) == "this_is_test_str"
 end
 
-@testset "Decryption(Encryption) is identity ~ CodeUnits" begin
-    n = big"3233"       # Example modulus
-    e = big"17"         # Example public exponent
-    d = big"2753"       # Example private exponent
-
-    public_key = ToyPublicKeys.RSAKey(n, (BigInt(53), BigInt(61)), e, ToyPublicKeys.public_key)
-    private_key = ToyPublicKeys.RSAKey(n, (BigInt(1), BigInt(1)), d, ToyPublicKeys.private_key)
-    msg = Base.CodeUnits("1")
-
-    encrypted = ToyPublicKeys.encrypt(msg, public_key)
-    decrypted = ToyPublicKeys.decrypt(encrypted, private_key)
-    @test decrypted == msg
+@testset "RSAStep(RSAStep) is identity ~ BigInt" begin
+    Random.seed!(42)
+    private_key, public_key = ToyPublicKeys.generate_RSAKeyPair(UInt16)
+    msg = big"2"
+    encrypted = ToyPublicKeys.RSAStep(msg, public_key)
+    decrypted = ToyPublicKeys.RSAStep(encrypted, private_key)
+    @test msg == decrypted
 end
 
-@testset "Decryption(Encryption) is identity ~ String" begin
-    n = big"3233"       # Example modulus
-    e = big"17"         # Example public exponent
-    d = big"2753"       # Example private exponent
+@testset "RSAStep(RSAStep) is identity ~ CodeUnits" begin
+    Random.seed!(42)
+    private_key, public_key = ToyPublicKeys.generate_RSAKeyPair(UInt16)
+    msg = codeunits("2")
+    encrypted = ToyPublicKeys.RSAStep(msg, public_key)
+    decrypted = ToyPublicKeys.RSAStep(encrypted, private_key)
+    @test msg == decrypted
+end
 
-    public_key = ToyPublicKeys.RSAKey(n, (BigInt(53), BigInt(61)), e, ToyPublicKeys.public_key)
-    private_key = ToyPublicKeys.RSAKey(n, (BigInt(1), BigInt(1)), d, ToyPublicKeys.private_key)
-    msg = "1"
-
-    encrypted = ToyPublicKeys.encrypt(msg, public_key)
-    decrypted = ToyPublicKeys.decrypt(encrypted, private_key)
-    @test decrypted == msg
+@testset "RSAStep(RSAStep) is identity ~ String" begin
+    Random.seed!(42)
+    private_key, public_key = ToyPublicKeys.generate_RSAKeyPair(UInt16)
+    msg = "2"
+    encrypted = ToyPublicKeys.RSAStep(msg, public_key)
+    decrypted = ToyPublicKeys.RSAStep(encrypted, private_key)
+    @test msg == decrypted
 end
 
 @testset "padding/pkcs_1_v1_5" begin
@@ -57,4 +42,23 @@ end
     @test padded_vector_correct == padded_vec
     unpadded_vector = ToyPublicKeys.unpad(padded_vector_correct)
     @test test_vector == unpadded_vector
+    @test UInt8[0x00, 0x02, 0x00, 0x01, 0x02, 0x03] == ToyPublicKeys.pad(test_vector, 0)
+end
+
+@testset "Decryption(Encryption) is identity ~ CodeUnits" begin
+    Random.seed!(42)
+    private_key, public_key = ToyPublicKeys.generate_RSAKeyPair(UInt16)
+    msg = Base.CodeUnits("1")
+    encrypted = ToyPublicKeys.encrypt(msg, public_key; pad_length = 1)
+    decrypted = ToyPublicKeys.decrypt(encrypted, private_key)
+    @test decrypted == msg
+end
+
+@testset "Decryption(Encryption) is identity ~ String" begin
+    Random.seed!(42)
+    private_key, public_key = ToyPublicKeys.generate_RSAKeyPair(UInt16)
+    msg = "1"
+    encrypted = ToyPublicKeys.encrypt(msg, public_key; pad_length = 1)
+    decrypted = ToyPublicKeys.decrypt(encrypted, private_key)
+    @test decrypted == msg
 end

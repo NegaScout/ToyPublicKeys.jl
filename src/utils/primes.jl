@@ -16,11 +16,11 @@ function is_probab_prime_p(n:: BigInt, n_tests:: Int)
     end
 end
 
-function rand_prime()
+function rand_prime(type:: Type)
     ntest = 20
     fst = Nothing
     while true
-        fst = BigInt(rand(UInt64))
+        fst = BigInt(rand(type))
         if is_probab_prime_p(fst, ntest) ∈ [:prime, :probably_prime]
             break
         end
