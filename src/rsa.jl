@@ -74,11 +74,12 @@ function decrypt(msg::AbstractVector, key::RSAKey)
     return ToyPublicKeys.unpad(vcat(typeof(msg_decr)([0]), msg_decr)) # todo: leading zero is ignored, gotta deal with this
 end
 
-function generate_RSAKeyPair(type:: Type)
+function generate_RSAKeyPair(bits:: Integer)
+    bits <= 0 && error("bits <= 0")
     # todo: not enough bit size
     e = big"65537"
-    p = rand_prime_for_rsa(type, e)
-    q = rand_prime_for_rsa(type, e)
+    p = rand_prime_for_rsa(bits, e)
+    q = rand_prime_for_rsa(bits, e)
     m = p * q
     carm_tot = lcm(p − 1, q − 1)
     if !(1 < e < carm_tot)
