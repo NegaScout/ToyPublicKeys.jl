@@ -72,3 +72,11 @@ end
     decrypted = ToyPublicKeys.decrypt(encrypted, private_key)
     @test decrypted == msg
 end
+
+@testset "verify_signature(sign) is true ~ String" begin
+    Random.seed!(42)
+    private_key, public_key = ToyPublicKeys.generate_RSAKeyPair(2048)
+    msg = "1"
+    signature = ToyPublicKeys.sign(msg, private_key; pad_length = 1)
+    @test ToyPublicKeys.verify_signature(msg, signature, public_key)
+end

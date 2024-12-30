@@ -1,3 +1,4 @@
+using SHA
 # NOTE: This RSA implementation tries to follow RFC 2313, however it is not conformant with it. Future work: conform this with RFC 2313 or better, with RFC 2437
 
 struct RSAPrivateKey
@@ -83,19 +84,19 @@ function pass_trough_GMP(str::String)
     return String(buff)
 end
 
-function encrypt(msg::Union{AbstractString,AbstractVector}, key::RSAKey; pad_length=32)
+function encrypt(msg::Union{AbstractString,AbstractVector}, key::RSAPublicKey; pad_length=32)
     msg_padded = ToyPublicKeys.pad(msg, pad_length)
     return RSAStep(msg_padded, key)
 end
 
-function decrypt(msg::AbstractString, key::RSAKey)
+function decrypt(msg::AbstractString, key::RSAPrivateKey)
     msg_ = codeunits(msg)
     msg_decr = RSAStep(msg_, key)
     unpaded = ToyPublicKeys.unpad(vcat(typeof(msg_decr)([0]), msg_decr)) # todo: leading zero is ignored, gotta deal with this 
     return String(unpaded)
 end
 
-function decrypt(msg::AbstractVector, key::RSAKey)
+function decrypt(msg::AbstractVector, key::RSAPrivateKey)
     msg_decr = RSAStep(msg, key)
     return ToyPublicKeys.unpad(vcat(typeof(msg_decr)([0]), msg_decr)) # todo: leading zero is ignored, gotta deal with this
 end
@@ -121,4 +122,24 @@ function generate_RSAKeyPair(bits::Integer)
         RSAPrivateKey(0, m, e, d, (p, q), (p_pow, q_pow), (q_param_p, q_param_q)),
         RSAPublicKey(0, m, e),
     )
+end
+
+function sign(msg::String, key::RSAPrivateKey; pad_length=32)
+    digest = SHA.sha256(msg)
+    msg_padded = ToyPublicKeys.pad(digest, pad_length)
+    return String(RSAStep(msg_padded, key))
+end
+
+function sign(msg::AbstractVector, key::RSAPrivateKey; pad_length=32)
+    digest = SHA.sha256(String(msg))
+    msg_padded = ToyPublicKeys.pad(digest, pad_length)
+    return RSAStep(msg_padded, key)
+end
+
+function verify_signature(msg::String, signature::String, key::RSAPublicKey; pad_length=32)
+    signature_ = codeunits(signature)
+    signature_decr = ToyPublicKeys.RSAStep(signature_, key)
+    unpaded_hash = ToyPublicKeys.unpad(vcat(typeof(signature_decr)([0]), signature_decr)) # todo: leading zero is ignored, gotta deal with this
+    digest = SHA.sha256(msg)
+    return unpaded_hash == digest
 end
