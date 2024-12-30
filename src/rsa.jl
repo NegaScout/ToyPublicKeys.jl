@@ -1,26 +1,43 @@
 # NOTE: This RSA implementation tries to follow RFC 2313, however it is not conformant with it. Future work: conform this with RFC 2313 or better, with RFC 2437
 
-struct RSAKey
-    key_module::BigInt
-    key_module_factorization::Tuple{BigInt,BigInt}
-    key_component::BigInt
-    type::AsymetricKeyType
+struct RSAPrivateKey
+    version::Int
+    modulus::BigInt
+    public_exponent::BigInt
+    exponent::BigInt
+    primes::Tuple{BigInt,BigInt}
+    crt_exponents::Tuple{BigInt,BigInt}
+    crt_coefficients::Tuple{BigInt,BigInt}
 end
 
-function RSAStep(msg::BigInt, key::RSAKey)
-    if !(0 <= msg < key.key_module)
-        error("msg has to be 0 <= msg < n, got: msg = $msg, n = $key.key_module")
+struct RSAPublicKey
+    version::Int
+    modulus::BigInt
+    exponent::BigInt
+end
+
+const RSAKey = Union{RSAPrivateKey,RSAPublicKey}
+
+function RSAStep(msg::BigInt, key::RSAPrivateKey)
+    if !(0 <= msg < key.modulus)
+        error("msg has to be 0 <= msg < n, got: msg = $msg, n = $key.modulus")
     end
-    if key.key_module_factorization != (0, 0)
-        return ToyPublicKeys.power_crt(
-            msg,
-            key.key_component,
-            key.key_module_factorization[1],
-            key.key_module_factorization[2],
-        )
-    else
-        return Base.GMP.MPZ.powm(msg, key.key_component, key.key_module)
+    return power_crt(
+        msg,
+        key.primes[1],
+        key.primes[2],
+        key.crt_exponents[1],
+        key.crt_coefficients[1],
+        key.crt_exponents[2],
+        key.crt_coefficients[2],
+    )
+end
+
+function RSAStep(msg::BigInt, key::RSAPublicKey)
+    if !(0 <= msg < key.modulus)
+        error("msg has to be 0 <= msg < n, got: msg = $msg, n = $key.modulus")
     end
+    return Base.GMP.MPZ.powm(msg, key.exponent, key.modulus)
 end
 
 function RSAStep(msg::AbstractVector{T}, key::RSAKey) where {T<:Base.BitInteger}
@@ -99,5 +116,9 @@ function generate_RSAKeyPair(bits::Integer)
     end
     d = BigInt()
     Base.GMP.MPZ.invert!(d, big"65537", carm_tot)
-    return (RSAKey(m, (p, q), d, private_key), RSAKey(m, (0, 0), e, public_key))
+    p_pow, q_param_p, q_pow, q_param_q = power_crt_components(d, p, q)
+    return (
+        RSAPrivateKey(0, m, e, d, (p, q), (p_pow, q_pow), (q_param_p, q_param_q)),
+        RSAPublicKey(0, m, e),
+    )
 end
