@@ -19,7 +19,7 @@ end
 
 @testset "RSAStep(RSAStep) is identity ~ BigInt" begin
     Random.seed!(42)
-    private_key, public_key = ToyPublicKeys.generate_RSAKeyPair(UInt16)
+    private_key, public_key = ToyPublicKeys.generate_RSAKeyPair(16)
     msg = big"2"
     encrypted = ToyPublicKeys.RSAStep(msg, public_key)
     decrypted = ToyPublicKeys.RSAStep(encrypted, private_key)
@@ -28,7 +28,7 @@ end
 
 @testset "RSAStep(RSAStep) is identity ~ CodeUnits" begin
     Random.seed!(42)
-    private_key, public_key = ToyPublicKeys.generate_RSAKeyPair(UInt16)
+    private_key, public_key = ToyPublicKeys.generate_RSAKeyPair(16)
     msg = codeunits("2")
     encrypted = ToyPublicKeys.RSAStep(msg, public_key)
     decrypted = ToyPublicKeys.RSAStep(encrypted, private_key)
@@ -37,7 +37,7 @@ end
 
 @testset "RSAStep(RSAStep) is identity ~ String" begin
     Random.seed!(42)
-    private_key, public_key = ToyPublicKeys.generate_RSAKeyPair(UInt16)
+    private_key, public_key = ToyPublicKeys.generate_RSAKeyPair(16)
     msg = "2"
     encrypted = ToyPublicKeys.RSAStep(msg, public_key)
     decrypted = ToyPublicKeys.RSAStep(encrypted, private_key)
@@ -57,7 +57,7 @@ end
 
 @testset "Decryption(Encryption) is identity ~ CodeUnits" begin
     Random.seed!(42)
-    private_key, public_key = ToyPublicKeys.generate_RSAKeyPair(UInt16)
+    private_key, public_key = ToyPublicKeys.generate_RSAKeyPair(16)
     msg = Base.CodeUnits("1")
     encrypted = ToyPublicKeys.encrypt(msg, public_key; pad_length = 1)
     decrypted = ToyPublicKeys.decrypt(encrypted, private_key)
@@ -66,7 +66,20 @@ end
 
 @testset "Decryption(Encryption) is identity ~ String" begin
     Random.seed!(42)
-    private_key, public_key = ToyPublicKeys.generate_RSAKeyPair(UInt16)
+    private_key, public_key = ToyPublicKeys.generate_RSAKeyPair(16)
+    msg = "1"
+    encrypted = ToyPublicKeys.encrypt(msg, public_key; pad_length = 1)
+    decrypted = ToyPublicKeys.decrypt(encrypted, private_key)
+    @test decrypted == msg
+end
+
+@testset "Decryption(Encryption) is identity 126 bit key ~ String" begin
+    # todo: for bit size > 126 is not identity
+    Random.seed!(42)
+    private_key, public_key = ToyPublicKeys.generate_RSAKeyPair(126)
+    println(private_key)
+    println()
+    println(public_key)
     msg = "1"
     encrypted = ToyPublicKeys.encrypt(msg, public_key; pad_length = 1)
     decrypted = ToyPublicKeys.decrypt(encrypted, private_key)
