@@ -2,9 +2,9 @@
 
 struct RSAKey
     key_module::BigInt
-    key_module_factorization:: Tuple{BigInt, BigInt}
+    key_module_factorization::Tuple{BigInt,BigInt}
     key_component::BigInt
-    type:: AsymetricKeyType
+    type::AsymetricKeyType
 end
 
 function RSAStep(msg::BigInt, key::RSAKey)
@@ -12,25 +12,32 @@ function RSAStep(msg::BigInt, key::RSAKey)
         error("msg has to be 0 <= msg < n, got: msg = $msg, n = $key.key_module")
     end
     if key.key_module_factorization != (0, 0)
-        return ToyPublicKeys.power_crt(msg, key.key_component, key.key_module_factorization[1], key.key_module_factorization[2])
+        return ToyPublicKeys.power_crt(
+            msg,
+            key.key_component,
+            key.key_module_factorization[1],
+            key.key_module_factorization[2],
+        )
     else
         return Base.GMP.MPZ.powm(msg, key.key_component, key.key_module)
     end
 end
 
-function RSAStep(msg::AbstractVector{T}, key::RSAKey) where T <: Base.BitInteger
+function RSAStep(msg::AbstractVector{T}, key::RSAKey) where {T<:Base.BitInteger}
     msg_bi = BigInt()
     # https://gmplib.org/manual/Integer-Import-and-Export#index-mpz_005fimport
     # void mpz_import (mpz_t rop, size_t count, int order, size_t size, int endian, size_t nails, const void *op)
     _order = 0
     _endian = 0
     _nails = 0
-    Base.GMP.MPZ.import!(msg_bi, length(msg), _order, sizeof(eltype(msg)), _endian, _nails, pointer(msg))
+    Base.GMP.MPZ.import!(
+        msg_bi, length(msg), _order, sizeof(eltype(msg)), _endian, _nails, pointer(msg)
+    )
     result = RSAStep(msg_bi, key)
     # https://gmplib.org/manual/Integer-Import-and-Export#index-mpz_005fexport
     # void * mpz_export (void *rop, size_t *countp, int order, size_t size, int endian, size_t nails, const mpz_t op)
     msg_buf = Vector{T}(undef, msg_bi.size)
-    Base.GMP.MPZ.export!(msg_buf, result, order=_order, nails=_nails, endian=_endian)
+    Base.GMP.MPZ.export!(msg_buf, result; order=_order, nails=_nails, endian=_endian)
     return msg_buf
 end
 
@@ -49,15 +56,17 @@ function pass_trough_GMP(str::String)
     # https://gmplib.org/manual/Integer-Import-and-Export#index-mpz_005fimport
     # void mpz_import (mpz_t rop, size_t count, int order, size_t size, int endian, size_t nails, const void *op)
     msg_ = codeunits(str)
-    Base.GMP.MPZ.import!(bi, length(msg_), _order, sizeof(eltype(msg_)), _endian, _nails, pointer(msg_))
+    Base.GMP.MPZ.import!(
+        bi, length(msg_), _order, sizeof(eltype(msg_)), _endian, _nails, pointer(msg_)
+    )
     # https://gmplib.org/manual/Integer-Import-and-Export#index-mpz_005fexport
     # void * mpz_export (void *rop, size_t *countp, int order, size_t size, int endian, size_t nails, const mpz_t op)
     buff = Vector{UInt8}(undef, bi.size)
-    Base.GMP.MPZ.export!(buff, bi, order=_order, nails=_nails, endian=_endian)
+    Base.GMP.MPZ.export!(buff, bi; order=_order, nails=_nails, endian=_endian)
     return String(buff)
 end
 
-function encrypt(msg::Union{AbstractString, AbstractVector}, key::RSAKey; pad_length=32)
+function encrypt(msg::Union{AbstractString,AbstractVector}, key::RSAKey; pad_length=32)
     msg_padded = ToyPublicKeys.pad(msg, pad_length)
     return RSAStep(msg_padded, key)
 end
@@ -74,7 +83,7 @@ function decrypt(msg::AbstractVector, key::RSAKey)
     return ToyPublicKeys.unpad(vcat(typeof(msg_decr)([0]), msg_decr)) # todo: leading zero is ignored, gotta deal with this
 end
 
-function generate_RSAKeyPair(bits:: Integer)
+function generate_RSAKeyPair(bits::Integer)
     bits <= 0 && error("bits <= 0")
     # todo: not enough bit size
     e = big"65537"
@@ -83,7 +92,9 @@ function generate_RSAKeyPair(bits:: Integer)
     m = p * q
     carm_tot = lcm(p − 1, q − 1)
     if !(1 < e < carm_tot)
-        println("Broken carm_tot,  has to be (1 < e < carm_tot): e = $e, carm_tot = $carm_tot")
+        println(
+            "Broken carm_tot,  has to be (1 < e < carm_tot): e = $e, carm_tot = $carm_tot"
+        )
         return Nothing
     end
     d = BigInt()
