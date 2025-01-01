@@ -4,7 +4,7 @@ CurrentModule = ToyPublicKeys
 
 # ToyPublicKeys
 
-Documentation for [ToyPublicKeys](https://github.com/NegaScout/ToyPublicKeys.jl).
+Documentation for [ToyPublicKeys](https://github.com/NegaScout/ToyPublicKeys).
 
 ```@index
 ```

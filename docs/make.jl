@@ -6,9 +6,9 @@ DocMeta.setdocmeta!(ToyPublicKeys, :DocTestSetup, :(using ToyPublicKeys); recurs
 makedocs(;
     modules=[ToyPublicKeys],
     authors="Jan Wagner <jenik.wagner@gmail.com> and contributors",
-    sitename="ToyPublicKeys.jl",
+    sitename="ToyPublicKeys",
     format=Documenter.HTML(;
-        canonical="https://NegaScout.github.io/ToyPublicKeys.jl",
+        canonical="https://NegaScout.github.io/ToyPublicKeys",
         edit_link="main",
         assets=String[],
     ),
@@ -18,6 +18,6 @@ makedocs(;
 )
 
 deploydocs(;
-    repo="github.com/NegaScout/ToyPublicKeys.jl",
+    repo="github.com/NegaScout/ToyPublicKeys",
     devbranch="main",
 )
