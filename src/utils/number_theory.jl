@@ -1,3 +1,6 @@
+"""
+    Core implementation of exp mod using CRT. 
+"""
 function power_crt(
     base::BigInt,
     p::BigInt,
@@ -15,16 +18,17 @@ function power_crt(
     return (z_p_result * q_param_p + z_q_result * q_param_q) % (p * q)
 end
 
+"""
+    Wrapper around core implementation, only for generating the parameters if they are not provided. 
+"""
 function power_crt(base::BigInt, pow::BigInt, p::BigInt, q::BigInt)
     p_pow, q_param_p, q_pow, q_param_q = power_crt_components(pow, p, q)
-    p_base = base % p
-    z_p_result = Base.GMP.MPZ.powm(p_base, p_pow, p)
-
-    q_base = base % q
-    z_q_result = Base.GMP.MPZ.powm(q_base, q_pow, q)
-    return (z_p_result * q_param_p + z_q_result * q_param_q) % (p * q)
+    return power_crt(base, p, q, p_pow, q_param_p, q_pow, q_param_q)
 end
 
+"""
+    Utility function for calculating the CRT parameters.
+"""
 function power_crt_components(pow::BigInt, p::BigInt, q::BigInt)
     p_pow = pow % (p - 1) # pow % φ(p)
     q_param_p = BigInt()

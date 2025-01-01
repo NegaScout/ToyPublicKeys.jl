@@ -1,6 +1,9 @@
 const padding_pkcs_1_v1_5_num_c_chars = 3
 const padding_pkcs_1_v1_5_pad_start = 3
 
+"""
+    Checks for magic bytes of PKCS#1 v1.5 padding.
+"""
 function is_padded(msg::AbstractVector{T}) where {T<:Base.BitInteger}
     if length(msg) < 3
         return false
@@ -14,6 +17,9 @@ function is_padded(msg::AbstractVector{T}) where {T<:Base.BitInteger}
     end
 end
 
+"""
+    Core implementation of the PKCS#1 v1.5 padding.
+"""
 function pad(msg::AbstractVector{T}, pad_length=32) where {T<:Base.BitInteger}
     buff = rand(T(1):T(typemax(T)), pad_length + 3)
     buff[1] = 0
@@ -23,12 +29,18 @@ function pad(msg::AbstractVector{T}, pad_length=32) where {T<:Base.BitInteger}
     return buff
 end
 
+"""
+    Wrapper for the core pad function.
+"""
 function pad(msg::T, pad_length=32) where {T<:AbstractString}
     msg_cu = codeunits(msg)
     msg_padded = pad(msg_cu, pad_length)
     return T(msg_padded)
 end
 
+"""
+    Core implementation for the PKCS#1 v1.5 pad unwrapping.
+"""
 function unpad(msg::AbstractVector{T}) where {T<:Base.BitInteger}
     if !is_padded(msg)
         error("Not padded: $msg")
@@ -39,6 +51,9 @@ function unpad(msg::AbstractVector{T}) where {T<:Base.BitInteger}
     return view(msg, pos:length(msg))
 end
 
+"""
+    Wrapper for the core unpad function.
+"""
 function unpad(msg::T) where {T<:AbstractString}
     msg_cu = codeunits(msg)
     msg_unpadded = unpad(msg_cu)
