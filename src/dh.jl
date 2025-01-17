@@ -17,6 +17,7 @@ function DHStep(intermidiary::BigInt, key::DHPrivateKey)
     return Base.GMP.MPZ.powm(intermidiary, key.private_component, key.modulus)
 end
 
-function generate_DHKeyPair(modulus::BigInt, public::BigInt, private::BigInt)
+function generate_dh_key_pair(bits::Integer)
+    modulus = rand_prime_for_dh(bits)
     return (DHPrivateKey(modulus, public, private), DHPublicKey(modulus, public))
 end
