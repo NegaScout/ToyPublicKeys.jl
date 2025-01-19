@@ -1,0 +1,6 @@
+```@autodocs
+Modules = [ToyPublicKeys]
+```
+
+```@index
+```
