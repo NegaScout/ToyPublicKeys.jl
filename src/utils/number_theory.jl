@@ -1,5 +1,15 @@
 """
-    Core implementation of exp mod using CRT. 
+    power_crt(
+        base::BigInt,
+        p::BigInt,
+        q::BigInt,
+        p_pow::BigInt,
+        q_param_p::BigInt,
+        q_pow::BigInt,
+        q_param_q::BigInt,
+    )
+
+Core implementation of exponentiation over modulus using [CRT](https://en.wikipedia.org/wiki/Chinese_remainder_theorem).
 """
 function power_crt(
     base::BigInt,
@@ -19,7 +29,9 @@ function power_crt(
 end
 
 """
-    Wrapper around core implementation, only for generating the parameters if they are not provided. 
+    power_crt(base::BigInt, pow::BigInt, p::BigInt, q::BigInt)
+
+Wrapper around core implementation, only for generating the parameters if they are not provided. 
 """
 function power_crt(base::BigInt, pow::BigInt, p::BigInt, q::BigInt)
     p_pow, q_param_p, q_pow, q_param_q = power_crt_components(pow, p, q)
@@ -27,7 +39,9 @@ function power_crt(base::BigInt, pow::BigInt, p::BigInt, q::BigInt)
 end
 
 """
-    Utility function for calculating the CRT parameters.
+    power_crt_components(pow::BigInt, p::BigInt, q::BigInt)
+
+Utility function for calculating the [CRT](https://en.wikipedia.org/wiki/Chinese_remainder_theorem) parameters.
 """
 function power_crt_components(pow::BigInt, p::BigInt, q::BigInt)
     p_pow = pow % (p - 1) # pow % φ(p)

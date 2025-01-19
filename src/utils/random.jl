@@ -1,5 +1,7 @@
 """
-    Custom random big int function since core julia does not yet provide 'proper one' (in my opinion).
+    random_bigint_from_range(bits::Integer)
+
+Custom random big int function since core julia does not yet provide 'proper one' (in my opinion).
 """
 function random_bigint_from_range(bits::Integer)
     bits <= 0 && error("bits <= 0")
