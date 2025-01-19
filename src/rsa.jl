@@ -2,8 +2,10 @@ using SHA
 # NOTE: This RSA implementation tries to follow RFC 2313, however it is not conformant with it. Future work: conform this with RFC 2313 or better, with RFC 2437
 
 """
-    RSAPrivateKey is PrivateKey struct for RSA.
-    It holds all information to derive public key and make efficient calculations.
+    RSAPrivateKey
+
+RSAPrivateKey is PrivateKey struct for RSA.
+It holds all information to derive public key and make efficient calculations.
 """
 struct RSAPrivateKey
     version::Int
@@ -16,8 +18,10 @@ struct RSAPrivateKey
 end
 
 """
+    RSAPrivateKey
+
     RSAPrivateKey is PublicKey struct for RSA.
-    It holds all neccecary information to perform public key computations, but not more.
+It holds all neccecary information to perform public key computations, but not more.
 """
 struct RSAPublicKey
     version::Int
@@ -25,11 +29,18 @@ struct RSAPublicKey
     exponent::BigInt
 end
 
+"""
+    RSAKey
+
+Union of RSAPrivateKey and RSAPublicKey for methods, that do not require specific key.
+"""
 const RSAKey = Union{RSAPrivateKey,RSAPublicKey}
 
 """
-    Fast implementation of the RSA exponentiation step, when RSAPrivateKey is provided.
-    It uses Chinese remainer theorem for very fast `exp() mod n` calculations.
+    RSAStep(msg::BigInt, key::RSAPrivateKey)
+
+Fast implementation of the RSA exponentiation step when RSAPrivateKey is provided.
+It uses [Chinese remainer theorem](https://en.wikipedia.org/wiki/Chinese_remainder_theorem) for very fast `exp() mod n` calculations.
 """
 function RSAStep(msg::BigInt, key::RSAPrivateKey)
     if !(0 <= msg < key.modulus)
@@ -47,8 +58,11 @@ function RSAStep(msg::BigInt, key::RSAPrivateKey)
 end
 
 """
-    RSA exponentiation step when only public key is available. 
-    Uses repeated squares and other fast modulo exponentiation tricks in its GMP implementation.
+    RSAStep(msg::BigInt, key::RSAPublicKey)
+
+RSA exponentiation step when only public key is available.
+Uses [repeated squares](https://en.wikipedia.org/wiki/Exponentiation_by_squaring)
+and other fast modulo exponentiation tricks in its GMP implementation (Base.GMP.MPZ.powm).
 """
 function RSAStep(msg::BigInt, key::RSAPublicKey)
     if !(0 <= msg < key.modulus)
@@ -58,9 +72,10 @@ function RSAStep(msg::BigInt, key::RSAPublicKey)
 end
 
 """
-    RSA exponentiation step for AbstractVectors (arbitrary buffers).
-    Same as the core BigInt version but with Vector to BigInt construction
-    and deconstruction.
+    RSAStep(msg::AbstractVector{T}, key::RSAKey) where {T<:Base.BitInteger}
+
+RSA exponentiation step for AbstractVectors (arbitrary buffers).
+Only prepares the buffer for [`RSAStep(msg::BigInt, key::RSAPublicKey)`](@ref).
 """
 function RSAStep(msg::AbstractVector{T}, key::RSAKey) where {T<:Base.BitInteger}
     msg_bi = BigInt()
@@ -81,7 +96,10 @@ function RSAStep(msg::AbstractVector{T}, key::RSAKey) where {T<:Base.BitInteger}
 end
 
 """
-    RSA exponentiation step for Strings.
+    RSAStep(msg::String, key::RSAKey)
+
+RSA exponentiation step for Strings.
+Only prepares the buffer for [`RSAStep(msg::BigInt, key::RSAPublicKey)`](@ref).
 """
 function RSAStep(msg::String, key::RSAKey)
     msg_cu = codeunits(msg)
@@ -91,7 +109,9 @@ function RSAStep(msg::String, key::RSAKey)
 end
 
 """
-    RSA encryption function with random padding.
+    encrypt(msg::Union{AbstractString,AbstractVector}, key::RSAPublicKey; pad_length=32)
+
+RSA encryption function with [PKCS#1 v1.5 padding](https://www.rfc-editor.org/rfc/rfc2313#section-8.1).
 """
 function encrypt(
     msg::Union{AbstractString,AbstractVector}, key::RSAPublicKey; pad_length=32
@@ -101,7 +121,9 @@ function encrypt(
 end
 
 """
-    RSA decryption function for strings.
+    ecrypt(msg::AbstractString, key::RSAPrivateKey)
+
+RSA decryption function for strings, expects [PKCS#1 v1.5 padding](https://www.rfc-editor.org/rfc/rfc2313#section-8.1).
 """
 function decrypt(msg::AbstractString, key::RSAPrivateKey)
     msg_ = codeunits(msg)
@@ -111,7 +133,9 @@ function decrypt(msg::AbstractString, key::RSAPrivateKey)
 end
 
 """
-    RSA decryption function for vectors.
+    ecrypt(msg::AbstractString, key::RSAPrivateKey)
+
+RSA decryption function for vectors (arbitrary buffers), expects [PKCS#1 v1.5 padding](https://www.rfc-editor.org/rfc/rfc2313#section-8.1).
 """
 function decrypt(msg::AbstractVector, key::RSAPrivateKey)
     msg_decr = RSAStep(msg, key)
@@ -119,7 +143,9 @@ function decrypt(msg::AbstractVector, key::RSAPrivateKey)
 end
 
 """
-    RSA key pair constructor.
+    generate_rsa_key_pair(bits::Integer)
+
+RSA key pair constructor (hopefully) according to [RFC 2313](https://www.rfc-editor.org/rfc/rfc2313.txt)
 """
 function generate_rsa_key_pair(bits::Integer)
     bits <= 0 && error("bits <= 0")
@@ -148,7 +174,9 @@ function generate_rsa_key_pair(bits::Integer)
 end
 
 """
-    Sign string with RSA key.
+    sign(msg::String, key::RSAPrivateKey; pad_length=32)
+
+Sign string with RSA key.
 """
 function sign(msg::String, key::RSAPrivateKey; pad_length=32)
     digest = SHA.sha256(msg)
@@ -157,7 +185,9 @@ function sign(msg::String, key::RSAPrivateKey; pad_length=32)
 end
 
 """
-    Sign AbstractVector (arbitrary buffer) with RSA key.
+    sign(msg::AbstractVector, key::RSAPrivateKey; pad_length=32)
+
+Sign AbstractVector (arbitrary buffer using [SHA256](https://en.wikipedia.org/wiki/SHA-2)) with RSA key.
 """
 function sign(msg::AbstractVector, key::RSAPrivateKey; pad_length=32)
     digest = SHA.sha256(String(msg))
@@ -166,7 +196,9 @@ function sign(msg::AbstractVector, key::RSAPrivateKey; pad_length=32)
 end
 
 """
-    Verify the sign result.
+    verify_signature(msg::String, signature::String, key::RSAPublicKey; pad_length=32)
+
+Verify the signature.
 """
 function verify_signature(msg::String, signature::String, key::RSAPublicKey; pad_length=32)
     signature_ = codeunits(signature)
