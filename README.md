@@ -6,3 +6,9 @@
 [![Coverage](https://codecov.io/gh/NegaScout/ToyPublicKeys.jl/branch/main/graph/badge.svg)](https://codecov.io/gh/NegaScout/ToyPublicKeys.jl)
 
 ToyPublicKeys.jl is **toy** implementation of selected public key-based cryptosystems. It tries to be *proper*, however it does not provide any formal garantues on correctness or robustness. It is mostly a preview of how a Julia native (besides GMP bindings) implementation of asymetric cryptosystems could look like :)
+
+Try it out as https://juliahub.com/ui/Packages/General/ToyPublicKeys
+
+```
+import Pkg; Pkg.add("ToyPublicKeys")
+```
