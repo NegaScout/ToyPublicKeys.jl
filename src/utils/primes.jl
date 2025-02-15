@@ -36,3 +36,16 @@ function rand_prime_for_rsa(bits::Integer, no_gcd_with=big"65537")
     end
     return fst
 end
+
+function rand_prime_for_dh(bits::Integer)
+    bits <= 0 && error("bits <= 0")
+    ntest = 20
+    fst = Nothing
+    while true
+        fst = random_bigint_from_range(bits)
+        if is_probab_prime_p(fst, ntest) ∈ [:prime, :probably_prime]
+            break
+        end
+    end
+    return fst
+end
