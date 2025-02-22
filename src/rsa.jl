@@ -196,11 +196,11 @@ function sign(msg::AbstractVector, key::RSAPrivateKey; pad_length=32)
 end
 
 """
-    verify_signature(msg::String, signature::String, key::RSAPublicKey; pad_length=32)
+    verify_signature(msg::String, signature::String, key::RSAPublicKey)
 
 Verify the signature.
 """
-function verify_signature(msg::String, signature::String, key::RSAPublicKey; pad_length=32)
+function verify_signature(msg::String, signature::String, key::RSAPublicKey)
     signature_ = codeunits(signature)
     signature_decr = ToyPublicKeys.RSAStep(signature_, key)
     unpaded_hash = ToyPublicKeys.unpad(vcat(typeof(signature_decr)([0]), signature_decr)) # todo: leading zero is ignored, gotta deal with this
