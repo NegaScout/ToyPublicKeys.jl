@@ -4,12 +4,10 @@ authors = ["Jan Wagner <jenik.wagner@gmail.com> and contributors"]
 version = "0.1.0"
 
 [deps]
-Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
 Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 SHA = "ea8e919c-243c-51af-8825-aaa63cd721ce"
 
 [compat]
-Documenter = "^1.8.0"
 Random = "^1.10.0"
 SHA = "^0.7.0"
 julia = "1.10, 1.11"
