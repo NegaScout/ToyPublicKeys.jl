@@ -7,7 +7,7 @@ Random.seed!(42)
 private_key, public_key = ToyPublicKeys.generate_rsa_key_pair(2048)
 msg = "Super secret message!"
 println(msg)
-encrypted = ToyPublicKeys.encrypt(msg, public_key; pad_length = 1)
+encrypted = ToyPublicKeys.encrypt(msg, public_key)
 println(encrypted)
 decrypted = ToyPublicKeys.decrypt(encrypted, private_key)
 println(decrypted)
