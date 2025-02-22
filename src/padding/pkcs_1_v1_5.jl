@@ -25,6 +25,7 @@ end
 Core implementation of the [PKCS#1 v1.5 padding](https://www.rfc-editor.org/rfc/rfc2313#section-8.1).
 """
 function pad(msg::AbstractVector{T}, pad_length=32) where {T<:Base.BitInteger}
+    pad_length > 8 || throw(error("Will not create pad with length < 8"))
     buff = rand(T(1):T(typemax(T)), pad_length + 3)
     buff[1] = 0
     buff[2] = 2
@@ -39,6 +40,7 @@ end
 Wrapper for the core pad function.
 """
 function pad(msg::T, pad_length=32) where {T<:AbstractString}
+    pad_length > 8 || throw(error("Will not create pad with length < 8"))
     msg_cu = codeunits(msg)
     msg_padded = pad(msg_cu, pad_length)
     return T(msg_padded)
