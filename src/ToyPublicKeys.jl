@@ -3,6 +3,7 @@ module ToyPublicKeys
 include("utils/primes.jl")
 include("utils/random.jl")
 include("utils/number_theory.jl")
+include("utils/string.jl")
 include("padding/pkcs_1_v1_5.jl")
 include("rsa.jl")
 include("dh.jl")
