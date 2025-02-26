@@ -1,5 +1,3 @@
-import Random
-
 @testset "pass_trough_GMP" begin
     function pass_trough_GMP(str::String)
         bi = BigInt()
