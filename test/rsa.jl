@@ -32,53 +32,53 @@ end
 
 @testset "RSAStep(RSAStep) is identity ~ BigInt" begin
     Random.seed!(42)
-    private_key, public_key = ToyPublicKeys.generate_rsa_key_pair(2048)
+    private_key, public_key = ToyPublicKeys.generate_rsa_key_pair(ToyPublicKeys.pkcs1_v1_5, 2048)
     msg = big"2"
-    encrypted = ToyPublicKeys.RSAStep(msg, public_key)
-    decrypted = ToyPublicKeys.RSAStep(encrypted, private_key)
+    encrypted = ToyPublicKeys.RSAStep(ToyPublicKeys.pkcs1_v1_5, msg, public_key)
+    decrypted = ToyPublicKeys.RSAStep(ToyPublicKeys.pkcs1_v1_5, encrypted, private_key)
     @test msg == decrypted
 end
 
 @testset "RSAStep(RSAStep) is identity ~ CodeUnits" begin
     Random.seed!(42)
-    private_key, public_key = ToyPublicKeys.generate_rsa_key_pair(2048)
+    private_key, public_key = ToyPublicKeys.generate_rsa_key_pair(ToyPublicKeys.pkcs1_v1_5, 2048)
     msg = codeunits("2")
-    encrypted = ToyPublicKeys.RSAStep(msg, public_key)
-    decrypted = ToyPublicKeys.RSAStep(encrypted, private_key)
+    encrypted = ToyPublicKeys.RSAStep(ToyPublicKeys.pkcs1_v1_5, msg, public_key)
+    decrypted = ToyPublicKeys.RSAStep(ToyPublicKeys.pkcs1_v1_5, encrypted, private_key)
     @test msg == decrypted
 end
 
 @testset "RSAStep(RSAStep) is identity ~ String" begin
     Random.seed!(42)
-    private_key, public_key = ToyPublicKeys.generate_rsa_key_pair(2048)
+    private_key, public_key = ToyPublicKeys.generate_rsa_key_pair(ToyPublicKeys.pkcs1_v1_5, 2048)
     msg = "2"
-    encrypted = ToyPublicKeys.RSAStep(msg, public_key)
-    decrypted = ToyPublicKeys.RSAStep(encrypted, private_key)
+    encrypted = ToyPublicKeys.RSAStep(ToyPublicKeys.pkcs1_v1_5, msg, public_key)
+    decrypted = ToyPublicKeys.RSAStep(ToyPublicKeys.pkcs1_v1_5, encrypted, private_key)
     @test msg == decrypted
 end
 
 @testset "Decryption(Encryption) is identity ~ CodeUnits" begin
     Random.seed!(42)
-    private_key, public_key = ToyPublicKeys.generate_rsa_key_pair(2048)
+    private_key, public_key = ToyPublicKeys.generate_rsa_key_pair(ToyPublicKeys.pkcs1_v1_5, 2048)
     msg = Base.CodeUnits("1")
-    encrypted = ToyPublicKeys.encrypt(msg, public_key)
-    decrypted = ToyPublicKeys.decrypt(encrypted, private_key)
+    encrypted = ToyPublicKeys.encrypt(ToyPublicKeys.pkcs1_v1_5, msg, public_key)
+    decrypted = ToyPublicKeys.decrypt(ToyPublicKeys.pkcs1_v1_5, encrypted, private_key)
     @test decrypted == msg
 end
 
 @testset "Decryption(Encryption) is identity ~ String" begin
     Random.seed!(42)
-    private_key, public_key = ToyPublicKeys.generate_rsa_key_pair(2048)
+    private_key, public_key = ToyPublicKeys.generate_rsa_key_pair(ToyPublicKeys.pkcs1_v1_5, 2048)
     msg = "1"
-    encrypted = ToyPublicKeys.encrypt(msg, public_key)
-    decrypted = ToyPublicKeys.decrypt(encrypted, private_key)
+    encrypted = ToyPublicKeys.encrypt(ToyPublicKeys.pkcs1_v1_5, msg, public_key)
+    decrypted = ToyPublicKeys.decrypt(ToyPublicKeys.pkcs1_v1_5, encrypted, private_key)
     @test decrypted == msg
 end
 
 @testset "verify_signature(sign) is true ~ String" begin
     Random.seed!(42)
-    private_key, public_key = ToyPublicKeys.generate_rsa_key_pair(2048)
+    private_key, public_key = ToyPublicKeys.generate_rsa_key_pair(ToyPublicKeys.pkcs1_v1_5, 2048)
     msg = "1"
-    signature = ToyPublicKeys.sign(msg, private_key)
-    @test ToyPublicKeys.verify_signature(msg, signature, public_key)
+    signature = ToyPublicKeys.sign(ToyPublicKeys.pkcs1_v1_5, msg, private_key)
+    @test ToyPublicKeys.verify_signature(ToyPublicKeys.pkcs1_v1_5, msg, signature, public_key)
 end
