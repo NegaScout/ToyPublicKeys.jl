@@ -1,6 +1,3 @@
-struct pkcs1_v2_2_t end
-const pkcs1_v2_2 = pkcs1_v2_2_t()
-
 function pad(::pkcs1_v2_2_t,
              msg::Union{AbstractString, AbstractVector},
              key::RSAKey;
