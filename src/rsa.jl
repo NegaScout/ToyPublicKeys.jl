@@ -112,7 +112,7 @@ function RSAStep(::pkcs1_v1_5_t, msg::AbstractVector{T}, key::RSAKey) where {T<:
     result = RSAStep(pkcs1_v1_5, msg_bi, key)
     # https://gmplib.org/manual/Integer-Import-and-Export#index-mpz_005fexport
     # void * mpz_export (void *rop, size_t *countp, int order, size_t size, int endian, size_t nails, const mpz_t op)
-    msg_buf = Vector{T}(undef, result.size)
+    msg_buf = Vector{T}(undef, abs(result.size))
     Base.GMP.MPZ.export!(msg_buf, result; order=_order, nails=_nails, endian=_endian)
     return msg_buf
 end
