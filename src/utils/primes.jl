@@ -30,7 +30,7 @@ function rand_prime_for_rsa(bits::Integer, no_gcd_with=big"65537")
     while true
         fst = random_bigint_from_range(bits)
         if is_probab_prime_p(fst, ntest) ∈ [:prime, :probably_prime] &&
-            gcd(fst, no_gcd_with) == 1
+            gcd(fst - 1, no_gcd_with) == 1
             break
         end
     end
