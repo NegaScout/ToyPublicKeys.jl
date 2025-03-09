@@ -1,10 +1,9 @@
 function pad(::pkcs1_v2_2_t,
-             msg::String,
+             msg::Vector{UInt8},
              key::RSAKey;
              label="",
              MGF=ToyPublicKeys.MGF1,
              hash=SHA.sha1)
-    msg = msg |> Vector{UInt8}
     k = (Base.GMP.MPZ.sizeinbase(key.modulus, 2)/8) |> ceil |> Integer
     lHash = hash(label)
     hLen = lHash |> length
@@ -21,18 +20,15 @@ function pad(::pkcs1_v2_2_t,
     seedMask = MGF(maskedDB, hLen)
     maskedSeed = seed .⊻ seedMask
     EM = vcat(zeros(UInt8, 1), maskedSeed, maskedDB)
-    #EM |> bigint |> I2OSP
     return EM
 end
 
 function unpad(::pkcs1_v2_2_t,
-               msg::String,
+               msg::Vector{UInt8},
                key::RSAKey;
                label="",
                MGF=ToyPublicKeys.MGF1,
                hash=SHA.sha1)
-    msg = msg |> OS2IP
-    # msg |> vector
     k = (Base.GMP.MPZ.sizeinbase(key.modulus, 2)/8) |> ceil |> Integer
     lHash = hash(label)
     hLen = lHash |> length
@@ -43,6 +39,8 @@ function unpad(::pkcs1_v2_2_t,
     seedMask = MGF(maskedDB, hLen)
     seed = maskedSeed .⊻ seedMask
     dbMask = MGF(seed, k - hLen - 1)
+    println(maskedDB)
+    println(dbMask)
     DB = maskedDB .⊻ dbMask
     lHashPrime = DB[1:hLen]
     PSLen = findfirst(Vector{UInt8}([1]), DB)
@@ -58,7 +56,7 @@ function MGF1(mgfSeed::Vector{UInt8}, maskLen:: Integer; hash = SHA.sha1)
     maskLen >= (2 << 32) && error("mask too long") |> throw
     T = Vector{UInt8}()
     for counter in big"0":BigInt((ceil(maskLen / hLen) - 1))
-        C = I2OSP(counter, 4) |> Vector{UInt8}
+        C = I2OSP(counter)
         T = vcat(T, hash(vcat(mgfSeed, C) |> String))
     end
     return T[1:maskLen]
