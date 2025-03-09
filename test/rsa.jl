@@ -117,3 +117,12 @@ end
     signature = ToyPublicKeys.RSASP1(ToyPublicKeys.pkcs1_v1_5, msg, private_key)
     @test ToyPublicKeys.RSAVP1(ToyPublicKeys.pkcs1_v1_5, signature, public_key) == msg
 end
+
+@testset "rsaes_oaep_decrypt(rsaes_oaep_encrypt) is true" begin
+    Random.seed!(42)
+    private_key, public_key = ToyPublicKeys.generate_rsa_key_pair(ToyPublicKeys.pkcs1_v1_5, 2048)
+    msg = Vector{UInt8}("123")
+    C = ToyPublicKeys.rsaes_oaep_encrypt(msg, public_key)
+    ret = ToyPublicKeys.rsaes_oaep_decrypt(C, private_key)
+    @test ret == msg
+end

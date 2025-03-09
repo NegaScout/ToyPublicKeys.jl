@@ -60,20 +60,8 @@ end
 Fast implementation of the RSA exponentiation step when RSAPrivateKey is provided.
 It uses [Chinese remainer theorem](https://en.wikipedia.org/wiki/Chinese_remainder_theorem) for very fast `exp() mod n` calculations.
 """
-function RSAEP(::pkcs1_v1_5_t, msg::BigInt, key::RSAPrivateKey)
-    if !(0 <= msg < key.modulus)
-        error("msg has to be 0 <= msg < n, got: msg = $msg, n = $key.modulus")
-    end
-    ret = power_crt(
-        msg,
-        key.primes[1],
-        key.primes[2],
-        key.crt_exponents[1],
-        key.crt_exponents[2],
-        key.crt_coefficients[2],
-    )
-    ret < 0 && (ret += msg) #???
-    return ret
+function RSAEP(v::pkcs1_v1_5_t, msg::BigInt, key::RSAPublicKey)
+    return RSAStep(v, msg, key)
 end
 
 """
@@ -83,7 +71,7 @@ RSA exponentiation step when only public key is available.
 Uses [repeated squares](https://en.wikipedia.org/wiki/Exponentiation_by_squaring)
 and other fast modulo exponentiation tricks in its GMP implementation (Base.GMP.MPZ.powm).
 """
-function RSADP(v::pkcs1_v1_5_t, msg::BigInt, key::RSAPublicKey)
+function RSADP(v::pkcs1_v1_5_t, msg::BigInt, key::RSAPrivateKey)
     return RSAStep(v, msg, key)
 end
 
@@ -163,6 +151,42 @@ function RSAStep(::pkcs1_v1_5_t, msg::String, key::RSAKey)
     result = RSAStep(pkcs1_v1_5, msg_cu, key)
     transformed_msg = String(result)
     return transformed_msg
+end
+
+function rsaes_oaep_encrypt(M::Vector{UInt8}, key::RSAPublicKey; label="", hash=SHA.sha1, MGF=MGF1)
+    EM = pad(pkcs1_v2_2, M, key, label=label, hash=hash, MGF=MGF)
+    m = OS2IP(EM)
+    c = RSAEP(pkcs1_v1_5, m, key)
+    k = (Base.GMP.MPZ.sizeinbase(key.modulus, 2)/8) |> ceil |> Integer
+    C = I2OSP(c, k)
+    return C
+end
+
+function rsaes_oaep_decrypt(C::Vector{UInt8}, key::RSAPrivateKey; label="", hash=SHA.sha1, MGF=MGF1)
+    c = OS2IP(C)
+    m = RSADP(pkcs1_v1_5, c, key)
+    k = (Base.GMP.MPZ.sizeinbase(key.modulus, 2)/8) |> ceil |> Integer
+    EM = I2OSP(m, k)
+    M = unpad(pkcs1_v2_2, EM, key, label=label, hash=hash, MGF=MGF)
+    return M
+end
+
+function rsaes_pkvs1_v1_5_encrypt(M::String, key::RSAPublicKey)
+    EM = pad(pkcs1_v1_5, M)
+    m = OS2IP(EM)
+    c = RSAEP(pkcs1_v1_5, m, key)
+    k = (Base.GMP.MPZ.sizeinbase(key.modulus, 2)/8) |> ceil |> Integer
+    C = I2OSP(c, k)
+    return C
+end
+
+function rsaes_pkvs1_v1_5_decrypt(C::String, key::RSAPrivateKey)
+    c = OS2IP(C)
+    m = RSADP(pkcs1_v1_5, c, key)
+    k = (Base.GMP.MPZ.sizeinbase(key.modulus, 2)/8) |> ceil |> Integer
+    EM = I2OSP(m, k)
+    m = unpad(pkcs1_v1_5, EM)
+    return m
 end
 
 """
