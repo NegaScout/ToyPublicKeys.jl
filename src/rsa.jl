@@ -165,6 +165,38 @@ function RSAStep(::pkcs1_v1_5_t, msg::String, key::RSAKey)
     return transformed_msg
 end
 
+function rsaes_oaep_encrypt(M::String, key::RSAPublicKey; label="", hash=SHA.sha1, MGF=MGF1)
+    EM = pad(pkcs1_v2_2, M, key, label=label, hash=hash, MGF=MGF)
+    m = OS2IP(EM)
+    c = RSAEP(pkcs1_v1_5, m, key)
+    C = I2OSP(c, k)
+    return C
+end
+
+function rsaes_oaep_decrypt(C::String, key::RSAPublicKey; label="", hash=SHA.sha1, MGF=MGF1)
+    c = OS2IP(C)
+    m = RSADP(pkcs1_v1_5, c, key)
+    EM = I2OSP(m, k)
+    M = unpad(pkcs1_v2_2, EM, key, label=label, hash=hash, MGF=MGF)
+    return M
+end
+
+function rsaes_pkvs1_v1_5_encrypt(M::String, key::RSAPublicKey)
+    EM = pad(pkcs1_v1_5, M)
+    m = OS2IP(EM)
+    c = RSAEP(pkcs1_v1_5, m, key)
+    C = I2OSP(c)
+    return C
+end
+
+function rsaes_pkvs1_v1_5_decrypt(C::String, key::RSAPrivateKey)
+    c = OS2IP(C)
+    m = RSADP(pkcs1_v1_5, c, key)
+    EM = I2OSP(m)
+    m = unpad(pkcs1_v1_5, EM)
+    return m
+end
+
 """
     encrypt(::pkcs1_v1_5_t,
             msg::Union{AbstractString,AbstractVector},
