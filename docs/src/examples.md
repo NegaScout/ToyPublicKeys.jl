@@ -19,9 +19,10 @@ using ToyPublicKeys
 Random.seed!(42)
 private_key, public_key = ToyPublicKeys.generate_rsa_key_pair(ToyPublicKeys.pkcs1_v1_5, 2048)
 msg = "Super authentic message!"
-println(msg)
-signature = ToyPublicKeys.sign(ToyPublicKeys.pkcs1_v1_5, msg, private_key)
-println(signature)
-authentic = ToyPublicKeys.verify_signature(ToyPublicKeys.pkcs1_v1_5, msg, signature, public_key)
-println(authentic)
+println("Currently this feature is disabled")
+#println(msg)
+#signature = ToyPublicKeys.sign(ToyPublicKeys.pkcs1_v1_5, msg, private_key)
+#println(signature)
+#authentic = ToyPublicKeys.verify_signature(ToyPublicKeys.pkcs1_v1_5, msg, signature, public_key)
+#println(authentic)
 ```
