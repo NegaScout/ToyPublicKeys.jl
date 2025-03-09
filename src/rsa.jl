@@ -83,15 +83,50 @@ RSA exponentiation step when only public key is available.
 Uses [repeated squares](https://en.wikipedia.org/wiki/Exponentiation_by_squaring)
 and other fast modulo exponentiation tricks in its GMP implementation (Base.GMP.MPZ.powm).
 """
-function RSADP(::pkcs1_v1_5_t, msg::BigInt, key::RSAPublicKey)
+function RSADP(v::pkcs1_v1_5_t, msg::BigInt, key::RSAPublicKey)
+    return RSAStep(v, msg, key)
+end
+
+"""
+    RSASP1(::pkcs1_v1_5_t, msg::BigInt, key::RSAPrivateKey)
+
+"""
+function RSASP1(v::pkcs1_v1_5_t, msg::BigInt, key::RSAPrivateKey)
+    return RSAStep(v, msg, key)
+end
+
+"""
+    RSAVP1(::pkcs1_v1_5_t, msg::BigInt, key::RSAPublicKey)
+
+"""
+function RSAVP1(v::pkcs1_v1_5_t, msg::BigInt, key::RSAPublicKey)
+    return RSAStep(v, msg, key)
+end
+
+function RSAStep(::pkcs1_v1_5_t, msg::BigInt, key::RSAPrivateKey)
     if !(0 <= msg < key.modulus)
         error("msg has to be 0 <= msg < n, got: msg = $msg, n = $key.modulus")
     end
-    return Base.GMP.MPZ.powm(msg, key.exponent, key.modulus)
+    ret = power_crt(
+        msg,
+        key.primes[1],
+        key.primes[2],
+        key.crt_exponents[1],
+        key.crt_exponents[2],
+        key.crt_coefficients[1],
+    )
+    ret < 0 && (ret += key.modulus)
+    return ret
 end
 
-RSAStep(a::pkcs1_v1_5_t, msg::BigInt, key::RSAPrivateKey) = RSAEP(a, msg, key)
-RSAStep(a::pkcs1_v1_5_t, msg::BigInt, key::RSAPublicKey) = RSADP(a, msg, key)
+function RSAStep(::pkcs1_v1_5_t, msg::BigInt, key::RSAPublicKey)
+    if !(0 <= msg < key.modulus)
+        error("msg has to be 0 <= msg < n, got: msg = $msg, n = $key.modulus")
+    end
+    ret = Base.GMP.MPZ.powm(msg, key.exponent, key.modulus)
+    ret < 0 && (ret += key.modulus)
+    return ret
+end
 
 """
     RSAStep(::pkcs1_v1_5_t, msg::AbstractVector{T}, key::RSAKey) where {T<:Base.BitInteger}
