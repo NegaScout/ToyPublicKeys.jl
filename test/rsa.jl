@@ -77,7 +77,7 @@ end
 @testset "RSAStep(RSAStep) is identity ~ CodeUnits" begin
     Random.seed!(42)
     private_key, public_key = ToyPublicKeys.generate_rsa_key_pair(ToyPublicKeys.pkcs1_v1_5, 2048)
-    msg = codeunits("2")
+    msg = codeunits("123")
     encrypted = ToyPublicKeys.RSAStep(ToyPublicKeys.pkcs1_v1_5, msg, public_key)
     decrypted = ToyPublicKeys.RSAStep(ToyPublicKeys.pkcs1_v1_5, encrypted, private_key)
     @test msg == decrypted
@@ -86,7 +86,7 @@ end
 @testset "RSAStep(RSAStep) is identity ~ String" begin
     Random.seed!(42)
     private_key, public_key = ToyPublicKeys.generate_rsa_key_pair(ToyPublicKeys.pkcs1_v1_5, 2048)
-    msg = "2"
+    msg = "123"
     encrypted = ToyPublicKeys.RSAStep(ToyPublicKeys.pkcs1_v1_5, msg, public_key)
     decrypted = ToyPublicKeys.RSAStep(ToyPublicKeys.pkcs1_v1_5, encrypted, private_key)
     @test msg == decrypted
@@ -95,7 +95,7 @@ end
 @testset "Decryption(Encryption) is identity ~ CodeUnits" begin
     Random.seed!(42)
     private_key, public_key = ToyPublicKeys.generate_rsa_key_pair(ToyPublicKeys.pkcs1_v1_5, 2048)
-    msg = Base.CodeUnits("1")
+    msg = Base.CodeUnits("123")
     encrypted = ToyPublicKeys.encrypt(ToyPublicKeys.pkcs1_v1_5, msg, public_key)
     decrypted = ToyPublicKeys.decrypt(ToyPublicKeys.pkcs1_v1_5, encrypted, private_key)
     @test decrypted == msg
@@ -104,7 +104,7 @@ end
 @testset "Decryption(Encryption) is identity ~ String" begin
     Random.seed!(42)
     private_key, public_key = ToyPublicKeys.generate_rsa_key_pair(ToyPublicKeys.pkcs1_v1_5, 2048)
-    msg = "1"
+    msg = "123"
     encrypted = ToyPublicKeys.encrypt(ToyPublicKeys.pkcs1_v1_5, msg, public_key)
     decrypted = ToyPublicKeys.decrypt(ToyPublicKeys.pkcs1_v1_5, encrypted, private_key)
     @test decrypted == msg
