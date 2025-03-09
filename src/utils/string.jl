@@ -29,12 +29,18 @@ function os2ip(x::String)
     return target
 end
 
-function I2OSP(x::BigInt)
+function I2OSP(x::BigInt, xLen::Integer)
     _order = 0
     _endian = 0
     _nails = 0
     ret = Vector{UInt8}()
     Base.GMP.MPZ.export!(ret, x; order=_order, nails=_nails, endian=_endian)
+    ret_len = ret |> length
+    if ret_len < xLen
+        ret = vcat(zeros(UInt8, xLen - ret_len), ret)
+    elseif ret_len > xLen
+        error("ret_len > xLen") |> throw
+    end
     return ret
 end
 
