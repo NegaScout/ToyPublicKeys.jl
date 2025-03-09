@@ -20,14 +20,49 @@
     @test pass_trough_GMP(test_str) == "this_is_test_str"
 end
 
+@testset "power_crt_components" begin
+    factor1 = big"9679"
+    factor2 = big"7883"
+    pow = big"654321"
+    d_p, d_q, q_inv, p_inv = ToyPublicKeys.power_crt_components(pow, factor1, factor2)
+    @test (d_p == 5895)
+    @test (d_q == 115)
+    @test (q_inv == 6785)
+    @test (p_inv == 2357)
+end
+
+@testset "power_crt from power_crt_components" begin
+    base = big"123456"
+    modul = big"76299557"
+    factor1 = big"9679"
+    factor2 = big"7883"
+    pow = big"654321"
+    d_p, d_q, q_inv, _ = ToyPublicKeys.power_crt_components(pow, factor1, factor2)
+    pow_crt = ToyPublicKeys.power_crt(base, factor1, factor2, d_p, d_q, q_inv)
+    pow_m = Base.GMP.MPZ.powm(base, pow, modul)
+    @test pow_crt == pow_m
+end
+
 @testset "power_crt" begin
     base = big"123456"
-    modul = big"265277633"
-    f1 = big"38561"
-    f2 = big"15107"
-    pow_crt = ToyPublicKeys.power_crt(base, modul, f1, f2)
-    pow_m = Base.GMP.MPZ.powm(base, modul, f1*f2)
+    modul = big"76299557"
+    factor1 = big"9679"
+    factor2 = big"7883"
+    pow = big"654321"
+    pow_crt = ToyPublicKeys.power_crt(base, pow, factor1, factor2)
+    pow_m = Base.GMP.MPZ.powm(base, pow, modul)
     @test pow_crt == pow_m
+end
+
+@testset "validate generate_rsa_key_pair" begin
+    Random.seed!(42)
+    private_key, public_key = ToyPublicKeys.generate_rsa_key_pair(ToyPublicKeys.pkcs1_v1_5, 2048)
+    @test try
+        ToyPublicKeys.validate(private_key)
+        true
+    catch
+        false
+    end
 end
 
 @testset "RSAStep(RSAStep) is identity ~ BigInt" begin
@@ -80,5 +115,5 @@ end
     private_key, public_key = ToyPublicKeys.generate_rsa_key_pair(ToyPublicKeys.pkcs1_v1_5, 2048)
     msg = "1"
     signature = ToyPublicKeys.sign(ToyPublicKeys.pkcs1_v1_5, msg, private_key)
-    @test ToyPublicKeys.verify_signature(ToyPublicKeys.pkcs1_v1_5, msg, signature, public_key)
+    @test ToyPublicKeys.verify_signature(ToyPublicKeys.pkcs1_v1_5, msg, signature, public_key) == true
 end
