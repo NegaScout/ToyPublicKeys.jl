@@ -18,9 +18,9 @@ struct RSAPrivateKey
     modulus::BigInt
     public_exponent::BigInt
     exponent::BigInt
-    primes::Tuple{BigInt,BigInt}
-    crt_exponents::Tuple{BigInt,BigInt}
-    crt_coefficients::Tuple{BigInt,BigInt}
+    primes::Vector{BigInt}
+    crt_exponents::Vector{BigInt}
+    crt_coefficients::Vector{BigInt}
 end
 
 """
@@ -48,19 +48,20 @@ const RSAKey = Union{RSAPrivateKey,RSAPublicKey}
 Fast implementation of the RSA exponentiation step when RSAPrivateKey is provided.
 It uses [Chinese remainer theorem](https://en.wikipedia.org/wiki/Chinese_remainder_theorem) for very fast `exp() mod n` calculations.
 """
-function RSAStep(::pkcs1_v1_5_t, msg::BigInt, key::RSAPrivateKey)
+function RSAEP(::pkcs1_v1_5_t, msg::BigInt, key::RSAPrivateKey)
     if !(0 <= msg < key.modulus)
         error("msg has to be 0 <= msg < n, got: msg = $msg, n = $key.modulus")
     end
-    return power_crt(
+    ret = power_crt(
         msg,
         key.primes[1],
         key.primes[2],
         key.crt_exponents[1],
-        key.crt_coefficients[1],
         key.crt_exponents[2],
         key.crt_coefficients[2],
     )
+    ret < 0 && (ret += msg) #???
+    return ret
 end
 
 """
@@ -70,12 +71,15 @@ RSA exponentiation step when only public key is available.
 Uses [repeated squares](https://en.wikipedia.org/wiki/Exponentiation_by_squaring)
 and other fast modulo exponentiation tricks in its GMP implementation (Base.GMP.MPZ.powm).
 """
-function RSAStep(::pkcs1_v1_5_t, msg::BigInt, key::RSAPublicKey)
+function RSADP(::pkcs1_v1_5_t, msg::BigInt, key::RSAPublicKey)
     if !(0 <= msg < key.modulus)
         error("msg has to be 0 <= msg < n, got: msg = $msg, n = $key.modulus")
     end
     return Base.GMP.MPZ.powm(msg, key.exponent, key.modulus)
 end
+
+RSAStep(a::pkcs1_v1_5_t, msg::BigInt, key::RSAPrivateKey) = RSAEP(a, msg, key)
+RSAStep(a::pkcs1_v1_5_t, msg::BigInt, key::RSAPublicKey) = RSADP(a, msg, key)
 
 """
     RSAStep(::pkcs1_v1_5_t, msg::AbstractVector{T}, key::RSAKey) where {T<:Base.BitInteger}
@@ -177,9 +181,11 @@ function generate_rsa_key_pair(::pkcs1_v1_5_t, bits::Integer)
     end
     d = BigInt()
     Base.GMP.MPZ.invert!(d, big"65537", carm_tot)
-    p_pow, q_param_p, q_pow, q_param_q = power_crt_components(d, p, q)
+    d_p, d_q, q_inv, p_inv = power_crt_components(d, p, q)
     return (
-        RSAPrivateKey(0, m, e, d, (p, q), (p_pow, q_pow), (q_param_p, q_param_q)),
+        RSAPrivateKey(0, m, e, d, [p, q],
+                                  [d_p, d_q],
+                                  [q_inv, p_inv]),
         RSAPublicKey(0, m, e),
     )
 end
