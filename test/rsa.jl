@@ -68,7 +68,7 @@ end
 @testset "RSAStep(RSAStep) is identity ~ BigInt" begin
     Random.seed!(42)
     private_key, public_key = ToyPublicKeys.generate_rsa_key_pair(ToyPublicKeys.pkcs1_v1_5, 2048)
-    msg = big"2"
+    msg = big"123"
     encrypted = ToyPublicKeys.RSAStep(ToyPublicKeys.pkcs1_v1_5, msg, public_key)
     decrypted = ToyPublicKeys.RSAStep(ToyPublicKeys.pkcs1_v1_5, encrypted, private_key)
     @test msg == decrypted
@@ -110,10 +110,10 @@ end
     @test decrypted == msg
 end
 
-@testset "verify_signature(sign) is true ~ String" begin
+@testset "RSASP1(RSAVP1) is true" begin
     Random.seed!(42)
     private_key, public_key = ToyPublicKeys.generate_rsa_key_pair(ToyPublicKeys.pkcs1_v1_5, 2048)
-    msg = "1"
-    # signature = ToyPublicKeys.sign(ToyPublicKeys.pkcs1_v1_5, msg, private_key)
-    # ToyPublicKeys.verify_signature(ToyPublicKeys.pkcs1_v1_5, msg, signature, public_key) == true
+    msg = big"3"
+    signature = ToyPublicKeys.RSASP1(ToyPublicKeys.pkcs1_v1_5, msg, private_key)
+    @test ToyPublicKeys.RSAVP1(ToyPublicKeys.pkcs1_v1_5, signature, public_key) == msg
 end
