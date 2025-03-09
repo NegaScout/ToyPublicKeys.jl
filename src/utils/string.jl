@@ -1,3 +1,10 @@
+function s_to_os(buf::String)
+    _buf = buf |> uppercase
+    it = Iterators.Stateful(_buf)
+    part = Base.Iterators.partition(it, 2)
+    return join(map(join, part), ':')
+end
+
 function I2OSP(x::BigInt)
     return I2OSP(x, Base.GMP.MPZ.sizeinbase(x, 16))
 end
@@ -10,10 +17,7 @@ function I2OSP(x::BigInt, xLen::Integer)
     fill!(buf, '0')
     buf_ptr = pointer(buf)
     Base.GMP.MPZ.get_str!(buf_ptr + xLen - base_size, 16, x)
-    _buf = String(buf) |> uppercase
-    it = Iterators.Stateful(_buf)
-    part = Base.Iterators.partition(it, 2)
-    return join(map(join, part), ':')
+    return s_to_os(buf |> String)
 end
 
 function OS2IP(x::String)

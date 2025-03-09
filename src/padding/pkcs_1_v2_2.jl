@@ -1,5 +1,5 @@
 function pad(::pkcs1_v2_2_t,
-             msg::Union{AbstractString, AbstractVector},
+             msg::String,
              key::RSAKey;
              label="",
              MGF=ToyPublicKeys.MGF1,
@@ -21,15 +21,18 @@ function pad(::pkcs1_v2_2_t,
     seedMask = MGF(maskedDB, hLen)
     maskedSeed = seed .⊻ seedMask
     EM = vcat(zeros(UInt8, 1), maskedSeed, maskedDB)
+    #EM |> bigint |> I2OSP
     return EM
 end
 
 function unpad(::pkcs1_v2_2_t,
-               msg::Union{AbstractString, AbstractVector},
+               msg::String,
                key::RSAKey;
                label="",
                MGF=ToyPublicKeys.MGF1,
                hash=SHA.sha1)
+    msg = msg |> OS2IP
+    # msg |> vector
     k = (Base.GMP.MPZ.sizeinbase(key.modulus, 2)/8) |> ceil |> Integer
     lHash = hash(label)
     hLen = lHash |> length

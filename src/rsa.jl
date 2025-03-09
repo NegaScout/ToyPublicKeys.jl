@@ -167,6 +167,7 @@ end
 
 function rsaes_oaep_encrypt(M::String, key::RSAPublicKey; label="", hash=SHA.sha1, MGF=MGF1)
     EM = pad(pkcs1_v2_2, M, key, label=label, hash=hash, MGF=MGF)
+    println(EM)
     m = OS2IP(EM)
     c = RSAEP(pkcs1_v1_5, m, key)
     C = I2OSP(c)
