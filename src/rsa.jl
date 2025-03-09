@@ -207,8 +207,9 @@ end
 
 Sign string with RSA key.
 """
-function sign(::pkcs1_v1_5_t, msg::String, key::RSAPrivateKey; pad_length=32)
-    digest = SHA.sha256(msg)
+function sign(::pkcs1_v1_5_t, msg::String, key::RSAPrivateKey; pad_length=32, hash=SHA.sha1)
+    error("needs reimplementing to be pkcs1_v1_5_t compliant") |> throw
+    digest = hash(msg)
     msg_padded = ToyPublicKeys.pad(pkcs1_v1_5, digest, pad_length)
     return String(RSAStep(pkcs1_v1_5, msg_padded, key))
 end
@@ -218,8 +219,9 @@ end
 
 Sign AbstractVector (arbitrary buffer using [SHA256](https://en.wikipedia.org/wiki/SHA-2)) with RSA key.
 """
-function sign(::pkcs1_v1_5_t, msg::AbstractVector, key::RSAPrivateKey; pad_length=32)
-    digest = SHA.sha256(String(msg))
+function sign(::pkcs1_v1_5_t, msg::AbstractVector, key::RSAPrivateKey; pad_length=32, hash=SHA.sha1)
+    error("needs reimplementing to be pkcs1_v1_5_t compliant") |> throw
+    digest = hash(String(msg))
     msg_padded = ToyPublicKeys.pad(pkcs1_v1_5, digest, pad_length)
     return RSAStep(pkcs1_v1_5, msg_padded, key)
 end
@@ -229,10 +231,11 @@ end
 
 Verify the signature.
 """
-function verify_signature(::pkcs1_v1_5_t, msg::String, signature::String, key::RSAPublicKey)
+function verify_signature(::pkcs1_v1_5_t, msg::String, signature::String, key::RSAPublicKey, hash=SHA.sha1)
+    error("needs reimplementing to be pkcs1_v1_5_t compliant") |> throw
     signature_ = codeunits(signature)
     signature_decr = ToyPublicKeys.RSAStep(pkcs1_v1_5, signature_, key)
     unpaded_hash = ToyPublicKeys.unpad(pkcs1_v1_5, vcat(typeof(signature_decr)([0]), signature_decr)) # todo: leading zero is ignored, gotta deal with this
-    digest = SHA.sha256(msg)
+    digest = hash(msg)
     return unpaded_hash == digest
 end
