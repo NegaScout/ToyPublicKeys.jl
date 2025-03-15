@@ -19,17 +19,19 @@ end
     test_vector = Vector{UInt8}([1,2,3])
     Random.seed!(42)
     padded = ToyPublicKeys.pad(ToyPublicKeys.pkcs1_v1_5, test_vector)
-    @test ToyPublicKeys.unpad(ToyPublicKeys.pkcs1_v1_5, padded) == test_vector
+    unpadded = ToyPublicKeys.unpad(ToyPublicKeys.pkcs1_v1_5, padded)
+    @test unpadded == test_vector
 end
 
 @testset "padding/pkcs_1_v2_2 pad(unpad) is identity" begin
-    test_vector = Vector{UInt8}([1,2,3])
+    test_vector = Vector{UInt8}([3,2,1])
     Random.seed!(42)
     private_key, public_key = ToyPublicKeys.generate_rsa_key_pair(ToyPublicKeys.pkcs1_v1_5, 2048)
     padded = ToyPublicKeys.pad(ToyPublicKeys.pkcs1_v2_2,
                                test_vector,
                                public_key)
-    @test test_vector == ToyPublicKeys.unpad(ToyPublicKeys.pkcs1_v2_2,
-                                             padded,
-                                             public_key)
+    unpadded = ToyPublicKeys.unpad(ToyPublicKeys.pkcs1_v2_2,
+                                    padded,
+                                    public_key)
+    @test unpadded == test_vector
 end

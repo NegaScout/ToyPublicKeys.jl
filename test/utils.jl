@@ -1,15 +1,15 @@
-@testset "I2OSP" begin
+@testset "i2osp" begin
     b = big"255"
-    @test b |> ToyPublicKeys.I2OSP == "FF"
-    @test b |> x -> ToyPublicKeys.I2OSP(x, 3) == "00:FF"
+    @test b |> ToyPublicKeys.i2osp == "FF"
+    @test b |> x -> ToyPublicKeys.i2osp(x, 3) == "00:FF"
 end
 
-@testset "OS2IP" begin
+@testset "os2ip" begin
     b = "FF"
-    @test b |> ToyPublicKeys.OS2IP == big"255"
+    @test b |> ToyPublicKeys.os2ip == big"255"
 end
 
-@testset "I2OSP |> OS2IP" begin
+@testset "i2osp |> os2ip" begin
     b = big"255"
-    @test b |> ToyPublicKeys.I2OSP |> ToyPublicKeys.OS2IP == b
+    @test b |> ToyPublicKeys.i2osp |> ToyPublicKeys.os2ip == b
 end
