@@ -189,6 +189,28 @@ function rsaes_pkvs1_v1_5_decrypt(C::String, key::RSAPrivateKey)
     return m
 end
 
+function rsassa_pss_sign(M::Vector{UInt8}, key::RSAPrivateKey)
+    modBits = Base.GMP.MPZ.sizeinbase(key.modulus, 2)
+    EM = emsa_pss_encode(M, modBits - 1)
+    m = OS2IP(EM)
+    s = RSASP1(pkcs1_v1_5, m, key)
+    k = (modBits/8) |> ceil |> Integer
+    S = I2OSP(s, k)
+    return S
+end
+
+function rsassa_pss_verify(M::Vector{UInt8}, S::Vector{UInt8}, key::RSAPublicKey)
+    modBits = Base.GMP.MPZ.sizeinbase(key.modulus, 2)
+    k = (modBits/8) |> ceil |> Integer
+    length(S) !=  k && error("invalid signature") |> throw
+    s = OS2IP(S)
+    m = RSAVP1(pkcs1_v1_5, s, key)
+    emLen = ceil((modBits - 1)/8) |> Integer
+    EM = I2OSP(m, emLen)
+    result = emsa_pss_verify(M, EM, modBits - 1)
+    return result
+end
+
 """
     encrypt(::pkcs1_v1_5_t,
             msg::Union{AbstractString,AbstractVector},
