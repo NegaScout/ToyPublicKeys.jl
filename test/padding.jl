@@ -1,3 +1,4 @@
+using SHA
 @testset "padding/pkcs_1_v1_5" begin
     test_vector = Vector{UInt8}([1,2,3])
     Random.seed!(42)
@@ -34,4 +35,52 @@ end
                                     padded,
                                     public_key)
     @test unpadded == test_vector
+end
+
+@testset "emsa_pss_encode" begin
+    Random.seed!(42)
+    M = Vector{UInt8}([3,2,1])
+    sLen = 0
+    hLen = SHA.sha1(UInt8[]) |> length
+    emBits = 8 * hLen + 8 * sLen + 9
+    padded = ToyPublicKeys.emsa_pss_encode(M,
+                                           emBits;
+                                           sLen=sLen,
+                                           hash=SHA.sha1)
+    @test padded == UInt8[0x00, 0x39, 0xa1, 0xb4, 0x56, 0x60, 0x17, 0xd8, 0x5f, 0xa1, 0x6e, 0xa9, 0xe8, 0xd1, 0xe6, 0x30, 0x5a, 0xbd, 0xa2, 0x75, 0xb9, 0xbc]
+end
+
+@testset "emsa_pss_verify" begin
+    Random.seed!(42)
+    M = Vector{UInt8}([3,2,1])
+    hLen = SHA.sha1(UInt8[]) |> length
+    sLen = 0
+    emBits = 8 * hLen + 8 * sLen + 9
+    emLen = ceil(emBits/8) |> Integer
+    EM = UInt8[0x00, 0x39, 0xa1, 0xb4, 0x56, 0x60, 0x17, 0xd8, 0x5f, 0xa1, 0x6e, 0xa9, 0xe8, 0xd1, 0xe6, 0x30, 0x5a, 0xbd, 0xa2, 0x75, 0xb9, 0xbc]
+    consistent = ToyPublicKeys.emsa_pss_verify(M,
+                                               EM,
+                                               emBits;
+                                               sLen=sLen,
+                                               hash=SHA.sha1)
+    @test consistent == true
+end
+
+@testset "emsa_pss_verify(emsa_pss_encode)" begin
+    Random.seed!(42)
+    M = Vector{UInt8}([3,2,1])
+    hLen = SHA.sha1(UInt8[]) |> length
+    sLen = 0
+    emBits = 8 * hLen + 8 * sLen + 9
+    emLen = ceil(emBits/8) |> Integer
+    EM = ToyPublicKeys.emsa_pss_encode(M,
+                                       emBits;
+                                       sLen = sLen,
+                                       hash=SHA.sha1)
+    consistent = ToyPublicKeys.emsa_pss_verify(M,
+                                               EM,
+                                               emBits;
+                                               sLen=sLen,
+                                               hash=SHA.sha1)
+    @test consistent == true
 end
