@@ -126,3 +126,12 @@ end
     ret = ToyPublicKeys.rsaes_oaep_decrypt(C, private_key)
     @test ret == msg
 end
+
+@testset "rsassa_pss_verify(rsassa_pss_sign) is true" begin
+    Random.seed!(42)
+    private_key, public_key = ToyPublicKeys.generate_rsa_key_pair(ToyPublicKeys.pkcs1_v1_5, 2048)
+    M = Vector{UInt8}("123")
+    S = ToyPublicKeys.rsassa_pss_sign(M, private_key)
+    valid = ToyPublicKeys.rsassa_pss_verify(M, S, public_key)
+    @test valid == true
+end
