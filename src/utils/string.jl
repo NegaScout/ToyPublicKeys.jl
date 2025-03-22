@@ -28,30 +28,3 @@ function os2ip(x::String)
     Base.GMP.MPZ.set_str!(target, pointer(buf), 16) == 0 || throw(error("string not valid base 16"))
     return target
 end
-
-function I2OSP(x::BigInt, xLen::Integer)
-    _order = 0
-    _endian = 0
-    _nails = 0
-    n = (Base.GMP.MPZ.sizeinbase(x, 2) / 8) |> ceil |> Integer
-    ret = zeros(UInt8, n)
-    Base.GMP.MPZ.export!(ret, x; order=_order, nails=_nails, endian=_endian)
-    ret_len = ret |> length
-    if ret_len < xLen
-        ret = vcat(zeros(UInt8, xLen - ret_len), ret)
-    elseif ret_len > xLen
-        error("ret_len > xLen") |> throw
-    end
-    return ret
-end
-
-function OS2IP(x::Vector{UInt8})
-    bi = BigInt()
-    _order = 0
-    _endian = 0
-    _nails = 0
-    Base.GMP.MPZ.import!(
-        bi, length(x), _order, sizeof(eltype(x)), _endian, _nails, pointer(x)
-    )
-    return bi
-end

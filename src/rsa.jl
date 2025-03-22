@@ -42,55 +42,6 @@ Union of RSAPrivateKey and RSAPublicKey for methods, that do not require specifi
 """
 const RSAKey = Union{RSAPrivateKey,RSAPublicKey}
 
-function validate(key::RSAPrivateKey)
-    (length(key.primes) >= 2) || error("length(key.primes) < 2") |> throw
-    all((key.public_exponent > 0, key.exponent > 0)) && all(key.primes .> 0) || error("all((key.public_exponent, key.exponent) .> 0, key.primes .> 0)") |> throw
-    (length(key.exponent) > 0) || error("length(key.primes) < 2") |> throw
-    (prod(key.primes) == key.modulus) || error("(prod(key.primes) != key.modulus)") |> throw
-    ((key.exponent * key.public_exponent) % lcm((key.primes .- 1)...)) == 1 || error("(key.exponent * key.public_exponent) % lcm((key.exponent - 1), (key.public_exponent - 1)) != 1") |> throw
-    (key.public_exponent * key.crt_exponents[1]) % (key.primes[1] - 1) == 1 || error(" (key.public_exponent * key.crt_exponents[1]) % (key.primes[1] - 1) != 1") |> throw
-    (key.public_exponent * key.crt_exponents[2]) % (key.primes[2] - 1) == 1 || error("(key.public_exponent * key.crt_exponents[2]) % (key.primes[2] - 1) != 1") |> throw
-    # is this consistent with the struct?
-    (key.primes[2] * key.crt_coefficients[1]) % key.primes[1] == 1 || error("(key.primes[2] * key.crt_coefficients[2]) % key.primes[1] != 1") |> throw
-end
-
-"""
-    RSAStep(::pkcs1_v1_5_t, msg::BigInt, key::RSAPrivateKey)
-
-Fast implementation of the RSA exponentiation step when RSAPrivateKey is provided.
-It uses [Chinese remainer theorem](https://en.wikipedia.org/wiki/Chinese_remainder_theorem) for very fast `exp() mod n` calculations.
-"""
-function RSAEP(v::pkcs1_v1_5_t, msg::BigInt, key::RSAPublicKey)
-    return RSAStep(v, msg, key)
-end
-
-"""
-    RSAStep(::pkcs1_v1_5_t, msg::BigInt, key::RSAPublicKey)
-
-RSA exponentiation step when only public key is available.
-Uses [repeated squares](https://en.wikipedia.org/wiki/Exponentiation_by_squaring)
-and other fast modulo exponentiation tricks in its GMP implementation (Base.GMP.MPZ.powm).
-"""
-function RSADP(v::pkcs1_v1_5_t, msg::BigInt, key::RSAPrivateKey)
-    return RSAStep(v, msg, key)
-end
-
-"""
-    RSASP1(::pkcs1_v1_5_t, msg::BigInt, key::RSAPrivateKey)
-
-"""
-function RSASP1(v::pkcs1_v1_5_t, msg::BigInt, key::RSAPrivateKey)
-    return RSAStep(v, msg, key)
-end
-
-"""
-    RSAVP1(::pkcs1_v1_5_t, msg::BigInt, key::RSAPublicKey)
-
-"""
-function RSAVP1(v::pkcs1_v1_5_t, msg::BigInt, key::RSAPublicKey)
-    return RSAStep(v, msg, key)
-end
-
 function RSAStep(::pkcs1_v1_5_t, msg::BigInt, key::RSAPrivateKey)
     if !(0 <= msg < key.modulus)
         error("msg has to be 0 <= msg < n, got: msg = $msg, n = $key.modulus")
@@ -153,63 +104,6 @@ function RSAStep(::pkcs1_v1_5_t, msg::String, key::RSAKey)
     return transformed_msg
 end
 
-function rsaes_oaep_encrypt(M::Vector{UInt8}, key::RSAPublicKey; label="", hash=SHA.sha1, MGF=MGF1)
-    EM = pad(pkcs1_v2_2, M, key, label=label, hash=hash, MGF=MGF)
-    m = OS2IP(EM)
-    c = RSAEP(pkcs1_v1_5, m, key)
-    k = (Base.GMP.MPZ.sizeinbase(key.modulus, 2)/8) |> ceil |> Integer
-    C = I2OSP(c, k)
-    return C
-end
-
-function rsaes_oaep_decrypt(C::Vector{UInt8}, key::RSAPrivateKey; label="", hash=SHA.sha1, MGF=MGF1)
-    c = OS2IP(C)
-    m = RSADP(pkcs1_v1_5, c, key)
-    k = (Base.GMP.MPZ.sizeinbase(key.modulus, 2)/8) |> ceil |> Integer
-    EM = I2OSP(m, k)
-    M = unpad(pkcs1_v2_2, EM, key, label=label, hash=hash, MGF=MGF)
-    return M
-end
-
-function rsaes_pkvs1_v1_5_encrypt(M::String, key::RSAPublicKey)
-    EM = pad(pkcs1_v1_5, M)
-    m = OS2IP(EM)
-    c = RSAEP(pkcs1_v1_5, m, key)
-    k = (Base.GMP.MPZ.sizeinbase(key.modulus, 2)/8) |> ceil |> Integer
-    C = I2OSP(c, k)
-    return C
-end
-
-function rsaes_pkvs1_v1_5_decrypt(C::String, key::RSAPrivateKey)
-    c = OS2IP(C)
-    m = RSADP(pkcs1_v1_5, c, key)
-    k = (Base.GMP.MPZ.sizeinbase(key.modulus, 2)/8) |> ceil |> Integer
-    EM = I2OSP(m, k)
-    m = unpad(pkcs1_v1_5, EM)
-    return m
-end
-
-function rsassa_pss_sign(M::Vector{UInt8}, key::RSAPrivateKey)
-    modBits = Base.GMP.MPZ.sizeinbase(key.modulus, 2)
-    EM = emsa_pss_encode(M, modBits - 1)
-    m = OS2IP(EM)
-    s = RSASP1(pkcs1_v1_5, m, key)
-    k = (modBits/8) |> ceil |> Integer
-    S = I2OSP(s, k)
-    return S
-end
-
-function rsassa_pss_verify(M::Vector{UInt8}, S::Vector{UInt8}, key::RSAPublicKey)
-    modBits = Base.GMP.MPZ.sizeinbase(key.modulus, 2)
-    k = (modBits/8) |> ceil |> Integer
-    length(S) !=  k && error("invalid signature") |> throw
-    s = OS2IP(S)
-    m = RSAVP1(pkcs1_v1_5, s, key)
-    emLen = ceil((modBits - 1)/8) |> Integer
-    EM = I2OSP(m, emLen)
-    result = emsa_pss_verify(M, EM, modBits - 1)
-    return result
-end
 
 """
     encrypt(::pkcs1_v1_5_t,
