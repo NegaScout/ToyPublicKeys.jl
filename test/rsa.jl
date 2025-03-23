@@ -135,3 +135,12 @@ end
     valid = ToyPublicKeys.rsassa_pss_verify(M, S, public_key)
     @test valid == true
 end
+
+@testset "rsassa_pkcs1_v1_5_verify(rsassa_pkcs1_v1_5_sign) is true" begin
+    Random.seed!(42)
+    private_key, public_key = ToyPublicKeys.generate_rsa_key_pair(ToyPublicKeys.pkcs1_v1_5, 2048)
+    M = Vector{UInt8}("321")
+    S = ToyPublicKeys.rsassa_pkcs1_v1_5_sign(M, private_key)
+    valid = ToyPublicKeys.rsassa_pkcs1_v1_5_verify(M, S, public_key)
+    @test valid == true
+end
