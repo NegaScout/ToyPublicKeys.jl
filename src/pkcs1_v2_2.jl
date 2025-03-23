@@ -146,6 +146,26 @@ function emsa_pss_verify(M::Vector{UInt8},
     return H == HPrime
 end
 
+const der_encoding_of_digest_info = Dict(
+    SHA.sha1 => [0x30, 0x21, 0x30, 0x09, 0x06, 0x05, 0x2b, 0x0e, 0x03, 0x02, 0x1a, 0x05, 0x00, 0x04, 0x14],
+    SHA.sha224 => [30, 0x2d, 0x30, 0x0d, 0x06, 0x09, 0x60, 0x86, 0x48, 0x01, 0x65, 0x03, 0x04, 0x02, 0x04, 0x05, 0x00, 0x04, 0x1c],
+    SHA.sha256 => [30, 0x31, 0x30, 0x0d, 0x06, 0x09, 0x60, 0x86, 0x48, 0x01, 0x65, 0x03, 0x04, 0x02, 0x01, 0x05, 0x00, 0x04, 0x20],
+    SHA.sha384 => [30, 0x41, 0x30, 0x0d, 0x06, 0x09, 0x60, 0x86, 0x48, 0x01, 0x65, 0x03, 0x04, 0x02, 0x02, 0x05, 0x00, 0x04, 0x30],
+    SHA.sha512 => [30, 0x51, 0x30, 0x0d, 0x06, 0x09, 0x60, 0x86, 0x48, 0x01, 0x65, 0x03, 0x04, 0x02, 0x03, 0x05, 0x00, 0x04, 0x40],
+)
+
+function emsa_pkcs1_v1_5_encode(M::Vector{UInt8},
+                                emLen::Integer;
+                                hash=SHA.sha1)
+    H = hash(M)
+    T = vcat(der_encoding_of_digest_info[hash], H)
+    tLen = length(T)
+    PS = Vector{UInt8}(undef, max(8, emLen - tLen - 3))
+    fill!(PS, 0xff)
+    EM = vcat([0x00, 0x01], PS, [0x00], T)
+    return EM
+end
+
 function rsaes_oaep_encrypt(M::Vector{UInt8},
                             key::RSAPublicKey;
                             label="",
@@ -214,6 +234,30 @@ function rsassa_pss_verify(M::Vector{UInt8},
     EM = I2OSP(m, emLen)
     result = emsa_pss_verify(M, EM, modBits - 1)
     return result
+end
+
+function rsassa_pkcs1_v1_5_sign(M::Vector{UInt8},
+                                key::RSAPrivateKey)
+    modBits = Base.GMP.MPZ.sizeinbase(key.modulus, 2)
+    k = (modBits/8) |> ceil |> Integer
+    EM = emsa_pkcs1_v1_5_encode(M, k)
+    m = OS2IP(EM)
+    s = RSASP1(pkcs1_v1_5, m, key)
+    S = I2OSP(s, k)
+    return S
+end
+
+function rsassa_pkcs1_v1_5_verify(M::Vector{UInt8},
+                                  S::Vector{UInt8},
+                                  key::RSAPublicKey)
+    modBits = Base.GMP.MPZ.sizeinbase(key.modulus, 2)
+    k = (modBits/8) |> ceil |> Integer
+    length(S) != k && error()
+    s = OS2IP(S)
+    m = RSAVP1(pkcs1_v1_5, s, key)
+    EM = I2OSP(m, k)
+    EMPrime = emsa_pkcs1_v1_5_encode(M, k)
+    return EM == EMPrime
 end
 
 function validate(key::RSAPrivateKey)
