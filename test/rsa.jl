@@ -6,7 +6,7 @@
         _nails = 0
         # https://gmplib.org/manual/Integer-Import-and-Export#index-mpz_005fimport
         # void mpz_import (mpz_t rop, size_t count, int order, size_t size, int endian, size_t nails, const void *op)
-        msg_ = codeunits(str)
+        msg_ = Vector{UInt8}(str)
         Base.GMP.MPZ.import!(
             bi, length(msg_), _order, sizeof(eltype(msg_)), _endian, _nails, pointer(msg_)
         )
@@ -74,10 +74,10 @@ end
     @test msg == decrypted
 end
 
-@testset "RSAStep(RSAStep) is identity ~ CodeUnits" begin
+@testset "RSAStep(RSAStep) is identity ~ Vector{UInt8}" begin
     Random.seed!(42)
     private_key, public_key = ToyPublicKeys.generate_rsa_key_pair(ToyPublicKeys.pkcs1_v1_5, 2048)
-    msg = codeunits("123")
+    msg = Vector{UInt8}("123")
     encrypted = ToyPublicKeys.RSAStep(ToyPublicKeys.pkcs1_v1_5, msg, public_key)
     decrypted = ToyPublicKeys.RSAStep(ToyPublicKeys.pkcs1_v1_5, encrypted, private_key)
     @test msg == decrypted
@@ -92,10 +92,10 @@ end
     @test msg == decrypted
 end
 
-@testset "Decryption(Encryption) is identity ~ CodeUnits" begin
+@testset "Decryption(Encryption) is identity ~ Vector{UInt8}" begin
     Random.seed!(42)
     private_key, public_key = ToyPublicKeys.generate_rsa_key_pair(ToyPublicKeys.pkcs1_v1_5, 2048)
-    msg = Base.CodeUnits("123")
+    msg = Vector{UInt8}("123")
     encrypted = ToyPublicKeys.encrypt(ToyPublicKeys.pkcs1_v1_5, msg, public_key)
     decrypted = ToyPublicKeys.decrypt(ToyPublicKeys.pkcs1_v1_5, encrypted, private_key)
     @test decrypted == msg
@@ -104,7 +104,7 @@ end
 @testset "Decryption(Encryption) is identity ~ String" begin
     Random.seed!(42)
     private_key, public_key = ToyPublicKeys.generate_rsa_key_pair(ToyPublicKeys.pkcs1_v1_5, 2048)
-    msg = "123"
+    msg = Vector{UInt8}("123")
     encrypted = ToyPublicKeys.encrypt(ToyPublicKeys.pkcs1_v1_5, msg, public_key)
     decrypted = ToyPublicKeys.decrypt(ToyPublicKeys.pkcs1_v1_5, encrypted, private_key)
     @test decrypted == msg

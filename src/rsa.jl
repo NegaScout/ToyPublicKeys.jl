@@ -71,22 +71,12 @@ end
 RSA exponentiation step for AbstractVectors (arbitrary buffers).
 Only prepares the buffer for [`RSAStep(msg::BigInt, key::RSAPublicKey)`](@ref).
 """
-function RSAStep(::pkcs1_v1_5_t, msg::AbstractVector{T}, key::RSAKey) where {T<:Base.BitInteger}
-    msg_bi = BigInt()
-    # https://gmplib.org/manual/Integer-Import-and-Export#index-mpz_005fimport
-    # void mpz_import (mpz_t rop, size_t count, int order, size_t size, int endian, size_t nails, const void *op)
-    _order = 0
-    _endian = 0
-    _nails = 0
-    Base.GMP.MPZ.import!(
-        msg_bi, length(msg), _order, sizeof(eltype(msg)), _endian, _nails, pointer(msg)
-    )
+function RSAStep(::pkcs1_v1_5_t, msg::Vector{UInt8}, key::RSAKey)
+    msg_bi = OS2IP(msg)
     result = RSAStep(pkcs1_v1_5, msg_bi, key)
-    # https://gmplib.org/manual/Integer-Import-and-Export#index-mpz_005fexport
-    # void * mpz_export (void *rop, size_t *countp, int order, size_t size, int endian, size_t nails, const mpz_t op)
-    msg_buf = Vector{T}(undef, abs(result.size))
-    Base.GMP.MPZ.export!(msg_buf, result; order=_order, nails=_nails, endian=_endian)
-    return msg_buf
+    xLen = (Base.GMP.MPZ.sizeinbase(result, 2) / 8) |> ceil |> Integer
+    ret = I2OSP(result, xLen)
+    return ret
 end
 
 """
@@ -96,50 +86,84 @@ RSA exponentiation step for Strings.
 Only prepares the buffer for [`RSAStep(msg::BigInt, key::RSAPublicKey)`](@ref).
 """
 function RSAStep(::pkcs1_v1_5_t, msg::String, key::RSAKey)
-    msg_cu = codeunits(msg)
+    msg_cu = Vector{UInt8}(msg)
     result = RSAStep(pkcs1_v1_5, msg_cu, key)
     transformed_msg = String(result)
     return transformed_msg
 end
 
-
 """
     encrypt(::pkcs1_v1_5_t,
-            msg::Union{AbstractString,AbstractVector},
-            key::RSAPublicKey
-            ; pad_length=32)
+            msg::Vector{UInt8},
+            key::RSAPublicKey)
 
 RSA encryption function with [PKCS#1 v1.5 padding](https://www.rfc-editor.org/rfc/rfc2313#section-8.1).
 """
 function encrypt(::pkcs1_v1_5_t,
-                 msg::Union{AbstractString,AbstractVector},
-                 key::RSAPublicKey
-                 ; pad_length=32
-)
-    msg_padded = ToyPublicKeys.pad(pkcs1_v1_5, msg, pad_length)
-    return RSAStep(pkcs1_v1_5, msg_padded, key)
+                 msg::Vector{UInt8},
+                 key::RSAPublicKey)
+    return rsaes_pkvs1_v1_5_encrypt(msg, key)
 end
 
 """
-    decrypt(::pkcs1_v1_5_t, msg::AbstractString, key::RSAPrivateKey)
+    encrypt(::pkcs1_v2_2_t,
+            msg::Vector{UInt8},
+            key::RSAPublicKey)
+
+RSA encryption function with [PKCS#1 v1.5 padding](https://www.rfc-editor.org/rfc/rfc2313#section-8.1).
+"""
+function encrypt(::pkcs1_v2_2_t,
+                 msg::Vector{UInt8},
+                 key::RSAPublicKey)
+    return rsaes_oaep_encrypt(msg, key)
+end
+
+"""
+    encrypt(msg::Vector{UInt8},
+            key::RSAPublicKey)
+
+RSA encryption function with [PKCS#1 v1.5 padding](https://www.rfc-editor.org/rfc/rfc2313#section-8.1).
+"""
+function encrypt(msg::Vector{UInt8},
+                 key::RSAPublicKey)
+    return rsaes_oaep_encrypt(msg, key)
+end
+
+"""
+    decrypt(::pkcs1_v1_5_t,
+            msg::Vector{UInt8},
+            key::RSAPrivateKey)
 
 RSA decryption function for strings, expects [PKCS#1 v1.5 padding](https://www.rfc-editor.org/rfc/rfc2313#section-8.1).
 """
-function decrypt(::pkcs1_v1_5_t, msg::AbstractString, key::RSAPrivateKey)
-    msg_ = codeunits(msg)
-    msg_decr = RSAStep(pkcs1_v1_5, msg_, key)
-    unpaded = ToyPublicKeys.unpad(pkcs1_v1_5, vcat(typeof(msg_decr)([0]), msg_decr)) # todo: leading zero is ignored, gotta deal with this 
-    return String(unpaded)
+function decrypt(::pkcs1_v1_5_t,
+                 msg::Vector{UInt8},
+                 key::RSAPrivateKey)
+    return rsaes_pkvs1_v1_5_decrypt(msg, key)
 end
 
 """
-    decrypt(::pkcs1_v1_5_t, msg::AbstractVector, key::RSAPrivateKey)
+    decrypt(::pkcs1_v2_2_t,
+            msg::Vector{UInt8},
+            key::RSAPrivateKey)
 
-RSA decryption function for vectors (arbitrary buffers), expects [PKCS#1 v1.5 padding](https://www.rfc-editor.org/rfc/rfc2313#section-8.1).
+RSA decryption function for strings, expects [PKCS#1 v1.5 padding](https://www.rfc-editor.org/rfc/rfc2313#section-8.1).
 """
-function decrypt(::pkcs1_v1_5_t, msg::AbstractVector, key::RSAPrivateKey)
-    msg_decr = RSAStep(pkcs1_v1_5, msg, key)
-    return ToyPublicKeys.unpad(pkcs1_v1_5, vcat(typeof(msg_decr)([0]), msg_decr)) # todo: leading zero is ignored, gotta deal with this
+function decrypt(::pkcs1_v2_2_t,
+                 msg::Vector{UInt8},
+                 key::RSAPrivateKey)
+    return rsaes_oaep_decrypt(msg, key)
+end
+
+"""
+    decrypt(msg::Vector{UInt8},
+            key::RSAPrivateKey)
+
+RSA decryption function for strings, expects [PKCS#1 v1.5 padding](https://www.rfc-editor.org/rfc/rfc2313#section-8.1).
+"""
+function decrypt(msg::Vector{UInt8},
+                 key::RSAPrivateKey)
+    return rsaes_oaep_decrypt(msg, key)
 end
 
 """
@@ -176,39 +200,78 @@ function generate_rsa_key_pair(::pkcs1_v1_5_t, bits::Integer)
 end
 
 """
-    sign(::pkcs1_v1_5_t, msg::String, key::RSAPrivateKey; pad_length=32)
-
+    sign(::pkcs1_v1_5_t,
+         msg::Vector{UInt8},
+         key::RSAPrivateKey)
 Sign string with RSA key.
 """
-function sign(::pkcs1_v1_5_t, msg::String, key::RSAPrivateKey; pad_length=32, hash=SHA.sha1)
-    error("needs reimplementing to be pkcs1_v1_5_t compliant") |> throw
-    digest = hash(msg)
-    msg_padded = ToyPublicKeys.pad(pkcs1_v1_5, digest, pad_length)
-    return String(RSAStep(pkcs1_v1_5, msg_padded, key))
+function sign(::pkcs1_v1_5_t,
+              msg::Vector{UInt8},
+              key::RSAPrivateKey)
+    return rsassa_pkcs1_v1_5_sign(msg, key)
 end
 
 """
-    sign(::pkcs1_v1_5_t, msg::AbstractVector, key::RSAPrivateKey; pad_length=32)
-
-Sign AbstractVector (arbitrary buffer using [SHA256](https://en.wikipedia.org/wiki/SHA-2)) with RSA key.
+    sign(::pkcs1_v2_2_t,
+         msg::Vector{UInt8},
+         key::RSAPrivateKey)
+Sign string with RSA key.
 """
-function sign(::pkcs1_v1_5_t, msg::AbstractVector, key::RSAPrivateKey; pad_length=32, hash=SHA.sha1)
-    error("needs reimplementing to be pkcs1_v1_5_t compliant") |> throw
-    digest = hash(String(msg))
-    msg_padded = ToyPublicKeys.pad(pkcs1_v1_5, digest, pad_length)
-    return RSAStep(pkcs1_v1_5, msg_padded, key)
+function sign(::pkcs1_v2_2_t,
+              msg::Vector{UInt8},
+              key::RSAPrivateKey)
+    return rsassa_pss_sign(msg, key)
 end
 
 """
-    verify_signature(::pkcs1_v1_5_t, msg::String, signature::String, key::RSAPublicKey)
+    sign(msg::Vector{UInt8},
+         key::RSAPrivateKey)
+Sign string with RSA key.
+"""
+function sign(msg::Vector{UInt8},
+              key::RSAPrivateKey)
+    return rsassa_pss_sign(msg, key)
+end
+
+"""
+    verify_signature(::pkcs1_v1_5_t,
+                     msg::Vector{UInt8},
+                     signature::Vector{UInt8},
+                     key::RSAPublicKey)
 
 Verify the signature.
 """
-function verify_signature(::pkcs1_v1_5_t, msg::String, signature::String, key::RSAPublicKey, hash=SHA.sha1)
-    error("needs reimplementing to be pkcs1_v1_5_t compliant") |> throw
-    signature_ = codeunits(signature)
-    signature_decr = ToyPublicKeys.RSAStep(pkcs1_v1_5, signature_, key)
-    unpaded_hash = ToyPublicKeys.unpad(pkcs1_v1_5, vcat(typeof(signature_decr)([0]), signature_decr)) # todo: leading zero is ignored, gotta deal with this
-    digest = hash(msg)
-    return unpaded_hash == digest
+function verify_signature(::pkcs1_v1_5_t,
+                          msg::Vector{UInt8},
+                          signature::Vector{UInt8},
+                          key::RSAPublicKey)
+    return rsassa_pkcs1_v1_5_verify(msg, signature, key)
+end
+
+"""
+    verify_signature(::pkcs1_v2_2_t,
+                     msg::Vector{UInt8},
+                     signature::Vector{UInt8},
+                     key::RSAPublicKey)
+
+Verify the signature.
+"""
+function verify_signature(::pkcs1_v2_2_t,
+                          msg::Vector{UInt8},
+                          signature::Vector{UInt8},
+                          key::RSAPublicKey)
+    return rsassa_pss_verify(msg, signature, key)
+end
+
+"""
+    verify_signature(msg::Vector{UInt8},
+                     signature::Vector{UInt8},
+                     key::RSAPublicKey)
+
+Verify the signature.
+"""
+function verify_signature(msg::Vector{UInt8},
+                          signature::Vector{UInt8},
+                          key::RSAPublicKey)
+    return rsassa_pss_verify(msg, signature, key)
 end
