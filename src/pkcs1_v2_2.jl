@@ -273,7 +273,7 @@ function rsassa_pkcs1_v1_5_verify(M::Vector{UInt8},
                                   key::RSAPublicKey)
     modBits = Base.GMP.MPZ.sizeinbase(key.modulus, 2)
     k = (modBits/8) |> ceil |> Integer
-    length(S) != k && error()
+    length(S) != k && error("length(S) != k")
     s = OS2IP(S)
     m = RSAVP1(pkcs1_v1_5, s, key)
     EM = I2OSP(m, k)
