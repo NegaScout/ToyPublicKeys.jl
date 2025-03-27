@@ -79,6 +79,26 @@ function rsaes_oaep_decode(msg::Vector{UInt8},
     return M
 end
 
+function eme_pkcs1_v1_5_encode(M::Vector{UInt8}, key::RSAPublicKey)
+    k = (Base.GMP.MPZ.sizeinbase(key.modulus, 2)/8) |> ceil |> Integer
+    mLen = length(M)
+    (mLen > k - 11) && error("(mLen > k - 11)")
+    PS  = rand(UInt8(1):typemax(UInt8), k - 3 - mLen)
+    EM = vcat(UInt8[0x00, 0x02], PS, UInt8[0x00], M)
+    return EM
+end
+
+
+function eme_pkcs1_v1_5_decode(EM::Vector{UInt8})
+    EM[1:2] != UInt8[0x00, 0x02] && error("EM[1:2] != UInt8[0x00, 0x02]")
+    PSIndex = findfirst(==(0x00), EM[3:end]) + 2
+    PS = EM[3:PSIndex - 1]
+    length(PS) < 8 && error("length(PS) < 8")
+    EM[PSIndex] != 0x00 && error("EM[PSIndex] != 0x00")
+    M = EM[PSIndex + 1:end]
+    return M
+end
+
 function MGF1(mgfSeed::Vector{UInt8},
               maskLen:: Integer;
               hash = SHA.sha1)
@@ -192,8 +212,9 @@ function rsaes_oaep_decrypt(C::Vector{UInt8},
     return M
 end
 
-function rsaes_pkvs1_v1_5_encrypt(M::String, key::RSAPublicKey)
-    EM = pad(pkcs1_v1_5, M)
+function rsaes_pkvs1_v1_5_encrypt(M::Vector{UInt8},
+                                  key::RSAPublicKey)
+    EM = eme_pkcs1_v1_5_encode(M, key)
     m = OS2IP(EM)
     c = RSAEP(pkcs1_v1_5, m, key)
     k = (Base.GMP.MPZ.sizeinbase(key.modulus, 2)/8) |> ceil |> Integer
@@ -201,13 +222,13 @@ function rsaes_pkvs1_v1_5_encrypt(M::String, key::RSAPublicKey)
     return C
 end
 
-function rsaes_pkvs1_v1_5_decrypt(C::String,
+function rsaes_pkvs1_v1_5_decrypt(C::Vector{UInt8},
                                   key::RSAPrivateKey)
     c = OS2IP(C)
     m = RSADP(pkcs1_v1_5, c, key)
     k = (Base.GMP.MPZ.sizeinbase(key.modulus, 2)/8) |> ceil |> Integer
     EM = I2OSP(m, k)
-    m = unpad(pkcs1_v1_5, EM)
+    m = eme_pkcs1_v1_5_decode(EM)
     return m
 end
 
