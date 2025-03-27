@@ -1,6 +1,4 @@
 using SHA
-# NOTE: This RSA implementation tries to follow RFC 2313, however it is not conformant with it. Future work: conform this with RFC 2313 or better, with RFC 2437
-
 struct pkcs1_v1_5_t end
 const pkcs1_v1_5 = pkcs1_v1_5_t()
 
