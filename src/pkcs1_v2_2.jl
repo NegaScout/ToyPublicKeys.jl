@@ -15,13 +15,7 @@ function I2OSP(x::BigInt, xLen::Integer)
 end
 
 function OS2IP(x::Vector{UInt8})
-    bi = BigInt()
-    _order = 0
-    _endian = 0
-    _nails = 0
-    Base.GMP.MPZ.import!(
-        bi, length(x), _order, sizeof(eltype(x)), _endian, _nails, pointer(x)
-    )
+    bi = mpz_import(x)
     return bi
 end
 

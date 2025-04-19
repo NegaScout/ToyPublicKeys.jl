@@ -1,5 +1,6 @@
 module ToyPublicKeys
 
+include("utils/mpi.jl")
 include("utils/primes.jl")
 include("utils/random.jl")
 include("utils/number_theory.jl")
