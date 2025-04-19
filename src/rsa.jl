@@ -97,7 +97,7 @@ end
             msg::Vector{UInt8},
             key::RSAPublicKey)
 
-RSA encryption function with [PKCS#1 v1.5 padding](https://www.rfc-editor.org/rfc/rfc2313#section-8.1).
+RSA encryption function with [PKCS#1 v1.5](https://www.rfc-editor.org/rfc/rfc2313#section-8.1).
 """
 function encrypt(::pkcs1_v1_5_t,
                  msg::Vector{UInt8},
@@ -110,7 +110,7 @@ end
             msg::Vector{UInt8},
             key::RSAPublicKey)
 
-RSA encryption function with [PKCS#1 v1.5 padding](https://www.rfc-editor.org/rfc/rfc2313#section-8.1).
+RSA encryption function with [PKCS#1 v2.2](https://www.rfc-editor.org/rfc/rfc8017.html#page-19).
 """
 function encrypt(::pkcs1_v2_2_t,
                  msg::Vector{UInt8},
@@ -122,7 +122,7 @@ end
     encrypt(msg::Vector{UInt8},
             key::RSAPublicKey)
 
-RSA encryption function with [PKCS#1 v1.5 padding](https://www.rfc-editor.org/rfc/rfc2313#section-8.1).
+RSA encryption function with [PKCS#1 v2.2](https://www.rfc-editor.org/rfc/rfc8017.html#page-19).
 """
 function encrypt(msg::Vector{UInt8},
                  key::RSAPublicKey)
@@ -134,7 +134,7 @@ end
             msg::Vector{UInt8},
             key::RSAPrivateKey)
 
-RSA decryption function for strings, expects [PKCS#1 v1.5 padding](https://www.rfc-editor.org/rfc/rfc2313#section-8.1).
+RSA decryption function, expects [PKCS#1 v1.5](https://www.rfc-editor.org/rfc/rfc2313#section-8.1).
 """
 function decrypt(::pkcs1_v1_5_t,
                  msg::Vector{UInt8},
@@ -147,7 +147,7 @@ end
             msg::Vector{UInt8},
             key::RSAPrivateKey)
 
-RSA decryption function for strings, expects [PKCS#1 v1.5 padding](https://www.rfc-editor.org/rfc/rfc2313#section-8.1).
+RSA decryption function, expects [PKCS#1 v2.2](https://www.rfc-editor.org/rfc/rfc8017.html#page-19).
 """
 function decrypt(::pkcs1_v2_2_t,
                  msg::Vector{UInt8},
@@ -159,7 +159,7 @@ end
     decrypt(msg::Vector{UInt8},
             key::RSAPrivateKey)
 
-RSA decryption function for strings, expects [PKCS#1 v1.5 padding](https://www.rfc-editor.org/rfc/rfc2313#section-8.1).
+RSA decryption function, expects [PKCS#1 v2.2](https://www.rfc-editor.org/rfc/rfc8017.html#page-19).
 """
 function decrypt(msg::Vector{UInt8},
                  key::RSAPrivateKey)
@@ -169,7 +169,7 @@ end
 """
     generate_rsa_key_pair(::pkcs1_v1_5_t, bits::Integer)
 
-RSA key pair constructor (hopefully) according to [RFC 2313](https://www.rfc-editor.org/rfc/rfc2313.txt)
+RSA key pair constructor (hopefully) according to [PKCS#1 v1.5](https://www.rfc-editor.org/rfc/rfc2313.txt)
 """
 function generate_rsa_key_pair(::pkcs1_v1_5_t, bits::Integer)
     bits <= 0 && error("bits <= 0")
@@ -203,7 +203,7 @@ end
     sign(::pkcs1_v1_5_t,
          msg::Vector{UInt8},
          key::RSAPrivateKey)
-Sign string with RSA key.
+Sign string with RSA key by [PKCS#1 v1.5](https://www.rfc-editor.org/rfc/rfc2313.txt)
 """
 function sign(::pkcs1_v1_5_t,
               msg::Vector{UInt8},
@@ -215,7 +215,7 @@ end
     sign(::pkcs1_v2_2_t,
          msg::Vector{UInt8},
          key::RSAPrivateKey)
-Sign string with RSA key.
+Sign string with RSA key by [PKCS#1 v2.2](https://www.rfc-editor.org/rfc/rfc8017.html#page-19)
 """
 function sign(::pkcs1_v2_2_t,
               msg::Vector{UInt8},
@@ -226,7 +226,7 @@ end
 """
     sign(msg::Vector{UInt8},
          key::RSAPrivateKey)
-Sign string with RSA key.
+Sign string with RSA key by [PKCS#1 v2.2](https://www.rfc-editor.org/rfc/rfc8017.html#page-19)
 """
 function sign(msg::Vector{UInt8},
               key::RSAPrivateKey)
@@ -239,7 +239,7 @@ end
                      signature::Vector{UInt8},
                      key::RSAPublicKey)
 
-Verify the signature.
+Verify the signature by [PKCS#1 v1.5](https://www.rfc-editor.org/rfc/rfc2313.txt)
 """
 function verify_signature(::pkcs1_v1_5_t,
                           msg::Vector{UInt8},
@@ -254,7 +254,7 @@ end
                      signature::Vector{UInt8},
                      key::RSAPublicKey)
 
-Verify the signature.
+Verify the signature by [PKCS#1 v2.2](https://www.rfc-editor.org/rfc/rfc8017.html#page-19)
 """
 function verify_signature(::pkcs1_v2_2_t,
                           msg::Vector{UInt8},
@@ -268,7 +268,7 @@ end
                      signature::Vector{UInt8},
                      key::RSAPublicKey)
 
-Verify the signature.
+Verify the signature by [PKCS#1 v2.2](https://www.rfc-editor.org/rfc/rfc8017.html#page-19)
 """
 function verify_signature(msg::Vector{UInt8},
                           signature::Vector{UInt8},
