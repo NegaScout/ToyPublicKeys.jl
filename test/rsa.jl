@@ -8,7 +8,7 @@
             # https://gmplib.org/manual/Integer-Import-and-Export#index-mpz_005fimport
             # void mpz_import (mpz_t rop, size_t count, int order, size_t size, int endian, size_t nails, const void *op)
             msg_ = Vector{UInt8}(str)
-            ccall((:__gmpz_import, :libgmp),
+            ccall((:__gmpz_import, Base.GMP.libgmp),
                   Cvoid,
                   (Ref{BigInt}, Csize_t, Cint, Csize_t, Cint, Csize_t, Ptr{Cvoid}),
                   bi, length(msg_), _order, sizeof(eltype(msg_)), _endian, _nails, pointer(msg_))
