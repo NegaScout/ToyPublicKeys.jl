@@ -8,7 +8,7 @@ Binding for GMPlib's [gmpz_probab_prime_p](https://gmplib.org/manual/Number-Theo
 Only uses probability based tests as it would equal factoring `n`` otherwise.
 """
 function is_probab_prime_p(n::BigInt, n_tests::Int)
-    ret = (ccall((:__gmpz_probab_prime_p, :libgmp), Cint, (mpz_t, Cint), n, n_tests))
+    ret = (ccall((:__gmpz_probab_prime_p, Base.GMP.libgmp), Cint, (mpz_t, Cint), n, n_tests))
     if ret == 2
         return :prime
     elseif ret == 1
